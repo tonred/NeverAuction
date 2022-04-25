@@ -3,7 +3,7 @@ pragma ton-solidity >= 0.57.3;
 import "@broxus/contracts/contracts/libraries/MsgFlag.sol";
 
 
-contract TransferUtils {
+abstract contract TransferUtils {
 
     modifier cashBack() {
         _reserve();

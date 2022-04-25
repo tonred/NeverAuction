@@ -1,0 +1,177 @@
+{
+	"ABI version": 2,
+	"version": "2.2",
+	"header": ["pubkey", "time", "expire"],
+	"functions": [
+		{
+			"name": "createDeAuction",
+			"inputs": [
+				{"name":"description","type":"string"},
+				{"components":[{"name":"min","type":"uint128"},{"name":"max","type":"uint128"}],"name":"prices","type":"tuple"},
+				{"name":"deviation","type":"uint128"},
+				{"name":"fee","type":"uint128"},
+				{"name":"value","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onDeAuctionInit",
+			"inputs": [
+				{"name":"nonce","type":"uint64"},
+				{"name":"value","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "stake",
+			"inputs": [
+				{"name":"deAuction","type":"address"},
+				{"name":"value","type":"uint128"},
+				{"name":"priceHash","type":"optional(uint256)"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onStake",
+			"inputs": [
+				{"name":"nonce","type":"uint64"},
+				{"name":"value","type":"uint128"},
+				{"name":"priceHash","type":"optional(uint256)"},
+				{"name":"success","type":"bool"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "removeStake",
+			"inputs": [
+				{"name":"deAuction","type":"address"},
+				{"name":"value","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onRemoveStake",
+			"inputs": [
+				{"name":"nonce","type":"uint64"},
+				{"name":"value","type":"uint128"},
+				{"name":"success","type":"bool"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "confirmPrice",
+			"inputs": [
+				{"name":"deAuction","type":"address"},
+				{"name":"price","type":"uint128"},
+				{"name":"salt","type":"uint256"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onConfirmPrice",
+			"inputs": [
+				{"name":"nonce","type":"uint64"},
+				{"name":"success","type":"bool"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "claim",
+			"inputs": [
+				{"name":"deAuction","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onClaim",
+			"inputs": [
+				{"name":"nonce","type":"uint64"},
+				{"name":"success","type":"bool"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "calcPriceHash",
+			"inputs": [
+				{"name":"price","type":"uint128"},
+				{"name":"salt","type":"uint256"}
+			],
+			"outputs": [
+				{"name":"value0","type":"uint256"}
+			]
+		},
+		{
+			"name": "calcAddress",
+			"inputs": [
+				{"name":"stateInit","type":"cell"}
+			],
+			"outputs": [
+				{"name":"value0","type":"address"}
+			]
+		},
+		{
+			"name": "constructor",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "_platformCode",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_platformCode","type":"cell"}
+			]
+		},
+		{
+			"name": "_root",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_root","type":"address"}
+			]
+		},
+		{
+			"name": "_owner",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_owner","type":"address"}
+			]
+		},
+		{
+			"name": "_lock",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_lock","type":"bool"}
+			]
+		}
+	],
+	"data": [
+	],
+	"events": [
+	],
+	"fields": [
+		{"name":"_pubkey","type":"uint256"},
+		{"name":"_timestamp","type":"uint64"},
+		{"name":"_constructorFlag","type":"bool"},
+		{"name":"_platformCode","type":"cell"},
+		{"name":"_root","type":"address"},
+		{"name":"_owner","type":"address"},
+		{"name":"_lock","type":"bool"},
+		{"name":"_stakes","type":"map(address,uint128)"},
+		{"name":"_hashes","type":"map(address,optional(uint256))"}
+	]
+}

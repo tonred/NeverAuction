@@ -1,0 +1,356 @@
+{
+	"ABI version": 2,
+	"version": "2.2",
+	"header": ["pubkey", "time", "expire"],
+	"functions": [
+		{
+			"name": "onGetDetails",
+			"inputs": [
+				{"components":[{"name":"fee","type":"uint128"},{"name":"deposit","type":"uint128"},{"name":"confirmTime","type":"uint32"},{"name":"finishTime","type":"uint32"},{"name":"minLotSize","type":"uint128"},{"name":"quotingPrice","type":"uint128"}],"name":"details","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "stake",
+			"inputs": [
+				{"name":"owner","type":"address"},
+				{"name":"value","type":"uint128"},
+				{"name":"priceHash","type":"optional(uint256)"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "removeStake",
+			"inputs": [
+				{"name":"owner","type":"address"},
+				{"name":"value","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "confirmPrice",
+			"inputs": [
+				{"name":"owner","type":"address"},
+				{"name":"price","type":"uint128"},
+				{"name":"value","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "finishVoting",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "allowedPrice",
+			"inputs": [
+			],
+			"outputs": [
+				{"components":[{"name":"min","type":"uint128"},{"name":"max","type":"uint128"}],"name":"allowed","type":"tuple"}
+			]
+		},
+		{
+			"name": "makeBid",
+			"inputs": [
+				{"name":"hash","type":"uint256"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onMakeBid",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onRemoveBid",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "confirmBid",
+			"inputs": [
+				{"name":"price","type":"uint128"},
+				{"name":"salt","type":"uint256"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onConfirmBid",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onWin",
+			"inputs": [
+				{"name":"price","type":"uint128"},
+				{"name":"amount","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "pingAuctionFinish",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onPingAuctionFinish",
+			"inputs": [
+				{"name":"value0","type":"uint8"},
+				{"name":"next","type":"uint8"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onGetWinner",
+			"inputs": [
+				{"components":[{"name":"owner","type":"address"},{"name":"price","type":"uint128"},{"name":"amount","type":"uint128"},{"name":"value","type":"uint128"}],"name":"winner","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onNeverTransfer",
+			"inputs": [
+				{"name":"value","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "slash",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "checkAggregator",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"bool"}
+			]
+		},
+		{
+			"name": "claim",
+			"inputs": [
+				{"name":"owner","type":"address"},
+				{"name":"value","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "auctionPhase",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"uint8"}
+			]
+		},
+		{
+			"name": "calcAddress",
+			"inputs": [
+				{"name":"stateInit","type":"cell"}
+			],
+			"outputs": [
+				{"name":"value0","type":"address"}
+			]
+		},
+		{
+			"name": "constructor",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "_platformCode",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_platformCode","type":"cell"}
+			]
+		},
+		{
+			"name": "_root",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_root","type":"address"}
+			]
+		},
+		{
+			"name": "_nonce",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_nonce","type":"uint64"}
+			]
+		},
+		{
+			"name": "_auction",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_auction","type":"address"}
+			]
+		},
+		{
+			"name": "_description",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_description","type":"string"}
+			]
+		},
+		{
+			"name": "_prices",
+			"inputs": [
+			],
+			"outputs": [
+				{"components":[{"name":"min","type":"uint128"},{"name":"max","type":"uint128"}],"name":"_prices","type":"tuple"}
+			]
+		},
+		{
+			"name": "_deviation",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_deviation","type":"uint128"}
+			]
+		},
+		{
+			"name": "_aggregatorFee",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_aggregatorFee","type":"uint128"}
+			]
+		},
+		{
+			"name": "_aggregator",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_aggregator","type":"address"}
+			]
+		},
+		{
+			"name": "_aggregatorStake",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_aggregatorStake","type":"uint128"}
+			]
+		},
+		{
+			"name": "_phase",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_phase","type":"uint8"}
+			]
+		},
+		{
+			"name": "_details",
+			"inputs": [
+			],
+			"outputs": [
+				{"components":[{"name":"fee","type":"uint128"},{"name":"deposit","type":"uint128"},{"name":"confirmTime","type":"uint32"},{"name":"finishTime","type":"uint32"},{"name":"minLotSize","type":"uint128"},{"name":"quotingPrice","type":"uint128"}],"name":"_details","type":"tuple"}
+			]
+		},
+		{
+			"name": "_totalStake",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_totalStake","type":"uint128"}
+			]
+		}
+	],
+	"data": [
+		{"key":1,"name":"_root","type":"address"},
+		{"key":2,"name":"_nonce","type":"uint64"}
+	],
+	"events": [
+		{
+			"name": "Stake",
+			"inputs": [
+				{"name":"owner","type":"address"},
+				{"name":"value","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "RemoveStake",
+			"inputs": [
+				{"name":"owner","type":"address"},
+				{"name":"value","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "ConfirmPrice",
+			"inputs": [
+				{"name":"owner","type":"address"},
+				{"name":"price","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "Claim",
+			"inputs": [
+				{"name":"owner","type":"address"},
+				{"name":"everValue","type":"uint128"},
+				{"name":"neverValue","type":"uint128"}
+			],
+			"outputs": [
+			]
+		}
+	],
+	"fields": [
+		{"name":"_pubkey","type":"uint256"},
+		{"name":"_timestamp","type":"uint64"},
+		{"name":"_constructorFlag","type":"bool"},
+		{"name":"_platformCode","type":"cell"},
+		{"name":"_root","type":"address"},
+		{"name":"_nonce","type":"uint64"},
+		{"name":"_auction","type":"address"},
+		{"name":"_description","type":"string"},
+		{"components":[{"name":"min","type":"uint128"},{"name":"max","type":"uint128"}],"name":"_prices","type":"tuple"},
+		{"name":"_deviation","type":"uint128"},
+		{"name":"_aggregatorFee","type":"uint128"},
+		{"name":"_aggregator","type":"address"},
+		{"name":"_aggregatorStake","type":"uint128"},
+		{"name":"_phase","type":"uint8"},
+		{"components":[{"name":"fee","type":"uint128"},{"name":"deposit","type":"uint128"},{"name":"confirmTime","type":"uint32"},{"name":"finishTime","type":"uint32"},{"name":"minLotSize","type":"uint128"},{"name":"quotingPrice","type":"uint128"}],"name":"_details","type":"tuple"},
+		{"name":"_totalStake","type":"uint128"},
+		{"name":"_avgPrice","type":"uint128"},
+		{"name":"_avgValue","type":"uint128"},
+		{"name":"_everValue","type":"uint128"},
+		{"name":"_neverValue","type":"uint128"},
+		{"name":"_aggregatorReward","type":"uint128"}
+	]
+}
