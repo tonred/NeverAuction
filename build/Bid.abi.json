@@ -18,8 +18,8 @@
 			],
 			"outputs": [
 				{"name":"value0","type":"address"},
-				{"name":"value1","type":"address"},
-				{"name":"value2","type":"uint256"}
+				{"name":"value1","type":"uint256"},
+				{"name":"value2","type":"address"}
 			]
 		},
 		{
@@ -43,30 +43,6 @@
 				{"name":"value0","type":"uint256"},
 				{"components":[{"name":"owner","type":"address"},{"name":"price","type":"uint128"},{"name":"amount","type":"uint128"},{"name":"value","type":"uint128"}],"name":"value1","type":"tuple"},
 				{"name":"value2","type":"uint128"}
-			]
-		},
-		{
-			"name": "_auction",
-			"inputs": [
-			],
-			"outputs": [
-				{"name":"_auction","type":"address"}
-			]
-		},
-		{
-			"name": "_hash",
-			"inputs": [
-			],
-			"outputs": [
-				{"name":"_hash","type":"uint256"}
-			]
-		},
-		{
-			"name": "_owner",
-			"inputs": [
-			],
-			"outputs": [
-				{"name":"_owner","type":"address"}
 			]
 		}
 	],

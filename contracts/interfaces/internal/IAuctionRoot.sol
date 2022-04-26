@@ -7,10 +7,11 @@ import "../../structures/DeAuctionConfig.sol";
 
 interface IAuctionRoot {
     function expectedDeParticipant(address owner) external view responsible returns (address deParticipant);
-    function currentAuction() external responsible returns (optional(address) auction);
+    function currentAuction() external view responsible returns (optional(address) auction);
 
-    function changeConfiguration(AuctionConfig config) external;
+    function changeAuctionConfig(AuctionConfig auctionConfig) external;
+    function changeDeAuctionGlobalConfig(DeAuctionGlobalConfig deAuctionGlobalConfig) external;
     function createAuction(uint128 minLotSize, uint128 quotingPrice) external;
-    function createDeAuction(address owner, DeAuctionConfig config) external;
+    function createDeAuction(address owner, DeAuctionInitConfig initConfig) external;
     function onFinish(bool success, BidData winner) external;
 }

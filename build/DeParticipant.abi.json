@@ -107,7 +107,7 @@
 				{"name":"salt","type":"uint256"}
 			],
 			"outputs": [
-				{"name":"value0","type":"uint256"}
+				{"name":"hash","type":"uint256"}
 			]
 		},
 		{
@@ -156,6 +156,22 @@
 			],
 			"outputs": [
 				{"name":"_lock","type":"bool"}
+			]
+		},
+		{
+			"name": "_stakes",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_stakes","type":"map(address,uint128)"}
+			]
+		},
+		{
+			"name": "_hashes",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_hashes","type":"map(address,optional(uint256))"}
 			]
 		}
 	],

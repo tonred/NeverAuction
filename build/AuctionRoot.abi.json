@@ -6,7 +6,8 @@
 		{
 			"name": "constructor",
 			"inputs": [
-				{"components":[{"name":"fee","type":"uint128"},{"name":"deposit","type":"uint128"},{"name":"openDuration","type":"uint32"},{"name":"confirmDuration","type":"uint32"},{"name":"bidCode","type":"cell"}],"name":"config","type":"tuple"}
+				{"components":[{"name":"fee","type":"uint128"},{"name":"deposit","type":"uint128"},{"name":"openDuration","type":"uint32"},{"name":"deBidDuration","type":"uint32"},{"name":"confirmDuration","type":"uint32"},{"name":"bidCode","type":"cell"}],"name":"auctionConfig","type":"tuple"},
+				{"components":[{"name":"subOpenDuration","type":"uint32"},{"name":"subConfirmDuration","type":"uint32"},{"name":"makeBidDuration","type":"uint32"},{"name":"initDetails","type":"cell"}],"name":"deAuctionGlobalConfig","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -31,9 +32,17 @@
 			]
 		},
 		{
-			"name": "changeConfiguration",
+			"name": "changeAuctionConfig",
 			"inputs": [
-				{"components":[{"name":"fee","type":"uint128"},{"name":"deposit","type":"uint128"},{"name":"openDuration","type":"uint32"},{"name":"confirmDuration","type":"uint32"},{"name":"bidCode","type":"cell"}],"name":"config","type":"tuple"}
+				{"components":[{"name":"fee","type":"uint128"},{"name":"deposit","type":"uint128"},{"name":"openDuration","type":"uint32"},{"name":"deBidDuration","type":"uint32"},{"name":"confirmDuration","type":"uint32"},{"name":"bidCode","type":"cell"}],"name":"auctionConfig","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "changeDeAuctionGlobalConfig",
+			"inputs": [
+				{"components":[{"name":"subOpenDuration","type":"uint32"},{"name":"subConfirmDuration","type":"uint32"},{"name":"makeBidDuration","type":"uint32"},{"name":"initDetails","type":"cell"}],"name":"deAuctionGlobalConfig","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -51,7 +60,7 @@
 			"name": "createDeAuction",
 			"inputs": [
 				{"name":"owner","type":"address"},
-				{"components":[{"name":"description","type":"string"},{"components":[{"name":"min","type":"uint128"},{"name":"max","type":"uint128"}],"name":"prices","type":"tuple"},{"name":"deviation","type":"uint128"},{"name":"aggregatorFee","type":"uint128"},{"name":"aggregator","type":"address"},{"name":"aggregatorStake","type":"uint128"}],"name":"config","type":"tuple"}
+				{"components":[{"name":"description","type":"string"},{"components":[{"name":"min","type":"uint128"},{"name":"max","type":"uint128"}],"name":"prices","type":"tuple"},{"name":"deviation","type":"uint128"},{"name":"aggregatorFee","type":"uint128"},{"name":"aggregator","type":"address"},{"name":"aggregatorStake","type":"uint128"}],"name":"initConfig","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -91,6 +100,14 @@
 			]
 		},
 		{
+			"name": "_elector",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_elector","type":"address"}
+			]
+		},
+		{
 			"name": "_nonce",
 			"inputs": [
 			],
@@ -99,11 +116,19 @@
 			]
 		},
 		{
-			"name": "_config",
+			"name": "_auctionConfig",
 			"inputs": [
 			],
 			"outputs": [
-				{"components":[{"name":"fee","type":"uint128"},{"name":"deposit","type":"uint128"},{"name":"openDuration","type":"uint32"},{"name":"confirmDuration","type":"uint32"},{"name":"bidCode","type":"cell"}],"name":"_config","type":"tuple"}
+				{"components":[{"name":"fee","type":"uint128"},{"name":"deposit","type":"uint128"},{"name":"openDuration","type":"uint32"},{"name":"deBidDuration","type":"uint32"},{"name":"confirmDuration","type":"uint32"},{"name":"bidCode","type":"cell"}],"name":"_auctionConfig","type":"tuple"}
+			]
+		},
+		{
+			"name": "_deAuctionGlobalConfig",
+			"inputs": [
+			],
+			"outputs": [
+				{"components":[{"name":"subOpenDuration","type":"uint32"},{"name":"subConfirmDuration","type":"uint32"},{"name":"makeBidDuration","type":"uint32"},{"name":"initDetails","type":"cell"}],"name":"_deAuctionGlobalConfig","type":"tuple"}
 			]
 		},
 		{
@@ -183,7 +208,8 @@
 		{"name":"_platformCode","type":"cell"},
 		{"name":"_elector","type":"address"},
 		{"name":"_nonce","type":"uint64"},
-		{"components":[{"name":"fee","type":"uint128"},{"name":"deposit","type":"uint128"},{"name":"openDuration","type":"uint32"},{"name":"confirmDuration","type":"uint32"},{"name":"bidCode","type":"cell"}],"name":"_config","type":"tuple"},
+		{"components":[{"name":"fee","type":"uint128"},{"name":"deposit","type":"uint128"},{"name":"openDuration","type":"uint32"},{"name":"deBidDuration","type":"uint32"},{"name":"confirmDuration","type":"uint32"},{"name":"bidCode","type":"cell"}],"name":"_auctionConfig","type":"tuple"},
+		{"components":[{"name":"subOpenDuration","type":"uint32"},{"name":"subConfirmDuration","type":"uint32"},{"name":"makeBidDuration","type":"uint32"},{"name":"initDetails","type":"cell"}],"name":"_deAuctionGlobalConfig","type":"tuple"},
 		{"name":"_isActionNow","type":"bool"},
 		{"name":"_auction","type":"address"},
 		{"name":"_auctionCode","type":"cell"},

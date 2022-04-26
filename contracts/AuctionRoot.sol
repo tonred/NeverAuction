@@ -5,21 +5,27 @@ pragma AbiHeader expire;
 pragma AbiHeader pubkey;
 
 import "./interfaces/external/IAggregator.sol";
+import "./interfaces/internal/IAuctionRoot.sol";
 import "./interfaces/internal/IElector.sol";
 import "./interfaces/internal/IUpgradable.sol";
 import "./platform/PlatformUtils.sol";
+import "./structures/AuctionConfig.sol";
 import "./structures/DeAuctionConfig.sol";
-import "Auction.sol";
+import "./utils/Constants.sol";
+import "./utils/ErrorCodes.sol";
+import "./utils/Gas.sol";
+import "./utils/TransferUtils.sol";
 
 
 contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils {
     event NewAuction(address auction);
     event NewDeAuction(address auction, address deAuction);
 
-    address static _elector;
+    address public static _elector;
 
     uint64 public _nonce;
-    AuctionConfig public _config;
+    AuctionConfig public _auctionConfig;
+    DeAuctionGlobalConfig public _deAuctionGlobalConfig;
     bool public _isActionNow;
     address public _auction;
 
@@ -45,8 +51,9 @@ contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils 
     }
 
 
-    constructor(AuctionConfig config) public onlyElector {
-        _config = config;
+    constructor(AuctionConfig auctionConfig, DeAuctionGlobalConfig deAuctionGlobalConfig) public onlyElector {
+        _auctionConfig = auctionConfig;
+        _deAuctionGlobalConfig = deAuctionGlobalConfig;
     }
 
 
@@ -54,7 +61,7 @@ contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils 
         return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} _deParticipantAddress(owner);
     }
 
-    function currentAuction() public responsible override returns (optional(address) auction) {
+    function currentAuction() public view responsible override returns (optional(address) auction) {
         if (_isActionNow) {
             auction.set(_auction);
         }
@@ -64,29 +71,34 @@ contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils 
     // todo getCodes, getParameters
     // todo find and replace all ' : '
 
-    function changeConfiguration(AuctionConfig config) public override onlyElector {
-        _config = config;
+    function changeAuctionConfig(AuctionConfig auctionConfig) public override onlyElector {
+        _auctionConfig = auctionConfig;
+    }
+
+    function changeDeAuctionGlobalConfig(DeAuctionGlobalConfig deAuctionGlobalConfig) public override onlyElector {
+        _deAuctionGlobalConfig = deAuctionGlobalConfig;
     }
 
     function createAuction(uint128 minLotSize, uint128 quotingPrice) public override cashBack {
         require(!_isActionNow, ErrorCodes.AUCTION_IS_ALREADY_RUNNING);
         TvmCell stateInit = _buildAuctionStateInit(_nonce++);
-        _auction = new Auction{
+        TvmCell initialParams = abi.encode(_auctionConfig, minLotSize, quotingPrice);
+        _auction = new Platform{
             stateInit: stateInit,
             value: Gas.DEPLOY_AUCTION_VALUE
-        }(_config, minLotSize, quotingPrice);
+        }(_auctionCode, initialParams, address(0));
         emit NewAuction(_auction);
         _isActionNow = true;
     }
 
-    function createDeAuction(address owner, DeAuctionConfig config) public override onlyDeParticipant(owner) {
+    function createDeAuction(address owner, DeAuctionInitConfig initConfig) public override onlyDeParticipant(owner) {
         DeAuctionErrorReason error;
         if (!_isActionNow) error = DeAuctionErrorReason.NO_ACTIVE_AUCTION;
-        if (config.prices.min > config.prices.max) error = DeAuctionErrorReason.WRONG_PRICE_RANGE;
-        if (config.description.byteLength() > Constants.MAX_STRING_LENGTH) error = DeAuctionErrorReason.TOO_LONG_DESCRIPTION;
+        if (initConfig.prices.min > initConfig.prices.max) error = DeAuctionErrorReason.WRONG_PRICE_RANGE;
+        if (initConfig.description.byteLength() > Constants.MAX_STRING_LENGTH) error = DeAuctionErrorReason.TOO_LONG_DESCRIPTION;
 
         if (error != DeAuctionErrorReason.OK) {
-            IAggregator(config.aggregator).onCreateDeAuctionException{
+            IAggregator(initConfig.aggregator).onCreateDeAuctionException{
                 value: 0,
                 flag: MsgFlag.REMAINING_GAS,
                 bounce: false
@@ -94,6 +106,7 @@ contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils 
             return;
         }
 
+        DeAuctionConfig config = DeAuctionConfig(initConfig, _deAuctionGlobalConfig);
         TvmCell stateInit = _buildDeAuctionStateInit(_nonce++);
         TvmCell initialParams = abi.encode(_auction, config);
         address deAuction = new Platform{
@@ -101,7 +114,7 @@ contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils 
             value: 0,
             flag: MsgFlag.REMAINING_GAS,
             bounce: false
-        }(_deAuctionCode, initialParams, owner);
+        }(_deAuctionCode, initialParams, address(0));
         emit NewDeAuction(_auction, deAuction);
     }
 
@@ -114,20 +127,24 @@ contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils 
         _isActionNow = false;
     }
 
-    function _buildAuctionStateInit(uint64 nonce) private view returns (TvmCell) {
-        return tvm.buildStateInit({
-            contr: Auction,
-            varInit: {
-                _root: address(this),
-                _nonce: nonce
-            },
-            pubkey: 0,
-            code: _auctionCode
-        });
+    function upgrade(TvmCell code) external override internalMsg {
+        emit CodeUpgraded();
+        TvmCell data = abi.encode(
+            _elector, _nonce, _auctionConfig, _deAuctionGlobalConfig, _isActionNow, _auction,
+            _auctionCode, _deAuctionCode, _deParticipantCode  // codes
+        );
+        tvm.setcode(code);
+        tvm.setCurrentCode(code);
+        onCodeUpgrade(data);
     }
 
-    function upgrade(TvmCell code) external override internalMsg {
-        // todo
+    function onCodeUpgrade(TvmCell data) private {
+        (
+            _elector, _nonce, _auctionConfig, _deAuctionGlobalConfig, _isActionNow, _auction,
+            _auctionCode, _deAuctionCode, _deParticipantCode
+        ) = abi.decode(data, (
+            address, uint64, AuctionConfig, DeAuctionGlobalConfig, bool, address, TvmCell, TvmCell, TvmCell
+        ));
     }
 
 }

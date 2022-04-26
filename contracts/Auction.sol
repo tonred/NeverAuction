@@ -7,15 +7,17 @@ pragma AbiHeader pubkey;
 import "./interfaces/external/IParticipant.sol";
 import "./interfaces/internal/IAuction.sol";
 import "./interfaces/internal/IAuctionRoot.sol";
+import "./platform/PlatformUtils.sol";
 import "./structures/AuctionConfig.sol";
 import "./utils/Constants.sol";
 import "./utils/ErrorCodes.sol";
 import "./utils/Gas.sol";
+import "./utils/HashUtils.sol";
 import "./utils/TransferUtils.sol";
 import "Bid.sol";
 
 
-contract Auction is IAuction, TransferUtils {
+contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
     event MakeBid(address owner, uint256 hash);
     event RemoveBid(address owner, uint256 hash);
     event ConfirmBid(address owner, uint256 hash);
@@ -24,14 +26,15 @@ contract Auction is IAuction, TransferUtils {
     address public static _root;
     uint64 public static _nonce;
 
+    uint128 public _minLotSize;
+    uint128 public _quotingPrice;
+
     uint128 public _fee;
     uint128 public _deposit;
     TvmCell public _bidCode;
 
-    uint128 public _minLotSize;
-    uint128 public _quotingPrice;
-
     Phase public _phase;
+    uint32 public _deBidTime;
     uint32 public _confirmTime;
     uint32 public _finishTime;
 
@@ -45,6 +48,12 @@ contract Auction is IAuction, TransferUtils {
 
     modifier onlyAuctionRoot() {
         require(msg.sender == _root, ErrorCodes.IS_NOT_ACTION_ROOT);
+        _;
+    }
+
+    modifier onlyDeAuction(uint64 nonce) {
+        address deAuction = _deAuctionAddress(nonce);
+        require(msg.sender == deAuction, 69);
         _;
     }
 
@@ -79,29 +88,31 @@ contract Auction is IAuction, TransferUtils {
     @param confirmDuration Duration of confirmation phase in seconds
     @param bidCode              Code of bid contract
     */
-    constructor(AuctionConfig config, uint128 minLotSize, uint128 quotingPrice) public onlyAuctionRoot {
-        require(config.fee > Gas.DEPLOY_BID_VALUE + Gas.CONFIRM_BID_VALUE, ErrorCodes.LOW_FEE_VALUE);
-        require(config.deposit > config.fee, ErrorCodes.LOW_DEPOSIT_VALUE);
-        require(
-            config.openDuration >= Constants.MIN_OPEN_DURATION &&
-            config.confirmDuration >= Constants.MIN_CONFIRM_DURATION,
-            ErrorCodes.TOO_SHORT_DURATION
-        );
+    function onCodeUpgrade(TvmCell input) private {
+        tvm.resetStorage();
+        TvmSlice slice = input.toSlice();
+        (_root, /*type*/, /*remainingGasTo*/) = slice.decode(address, uint8, address);
+        _platformCode = slice.loadRef();
 
+        TvmCell initialData = slice.loadRef();
+        _nonce = abi.decode(initialData, uint64);
+
+        TvmCell initialParams = slice.loadRef();
+        AuctionConfig config;
+        (config, _minLotSize, _quotingPrice) = abi.decode(initialParams, (AuctionConfig, uint128, uint128));
         _fee = config.fee;
         _deposit = config.deposit;
         _bidCode = config.bidCode;
 
-        _minLotSize = minLotSize;
-        _quotingPrice = quotingPrice;
-
         _phase = Phase.OPEN;
-        _confirmTime = now + config.openDuration;
+        _deBidTime = now + config.openDuration;
+        _confirmTime = _deBidTime + config.deBidDuration;
         _finishTime = _confirmTime + config.confirmDuration;
     }
 
+
     function getDetails() public view responsible override returns (AuctionDetails details) {
-        details = AuctionDetails(_fee, _deposit, _confirmTime, _finishTime, _minLotSize, _quotingPrice);
+        details = AuctionDetails(_fee, _deposit, _deBidTime, _confirmTime, _finishTime, _minLotSize, _quotingPrice);
         return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} details;
     }
 
@@ -136,6 +147,14 @@ contract Auction is IAuction, TransferUtils {
     @value          Must be greater than or equal to the deposit
     */
     function makeBid(uint256 hash) public override withUpdate inPhase(Phase.OPEN) {
+        _makeBid(hash);
+    }
+
+    function makeDeBid(uint64 nonce, uint256 hash) public override onlyDeAuction(nonce) withUpdate inPhase(Phase.DE_BID) {
+        _makeBid(hash);
+    }
+
+    function _makeBid(uint256 hash) private {
         require(msg.value >= _deposit, ErrorCodes.LOW_MSG_VALUE);
         TvmCell stateInit = _buildBidStateInit(hash);
         new Bid{
@@ -212,15 +231,16 @@ contract Auction is IAuction, TransferUtils {
     /*
     Calculates hash of bid
     Can be used off-chain before `makeBid` and `removeBid` functions
-    @param price    Bid price
-    @param amount   Amount to buy
-    @param sender   Address sender
+    @param price    Bid price (greater than or equal to quoting price)
+    @param amount   Amount to buy (greater than or equal to min lot size)
+    @param sender   Address of sender
     @param salt     Random 256-bit value (please use really random number)
     @return         256-bit hash
     */
-    function calcBidHash(uint128 price, uint128 amount, address sender, uint256 salt) public pure override returns (uint256) {
-        TvmCell data = abi.encode(price, amount, sender, salt);
-        return tvm.hash(data);
+    function calcBidHash(uint128 price, uint128 amount, address sender, uint256 salt) public view override returns (uint256 hash) {
+        require(price >= _quotingPrice, 69);
+        require(amount >= _minLotSize, 69);
+        return _calcBidHash(price, amount, sender, salt);
     }
 
     function finish() public override {
@@ -323,10 +343,6 @@ contract Auction is IAuction, TransferUtils {
             },
             code: _bidCode
         });
-    }
-
-    function calcAddress(TvmCell stateInit) public pure returns (address) {
-        return address(tvm.hash(stateInit));
     }
 
 }

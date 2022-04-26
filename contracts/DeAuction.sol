@@ -14,10 +14,11 @@ import "./structures/DePhase.sol";
 import "./utils/Constants.sol";
 import "./utils/ErrorCodes.sol";
 import "./utils/Gas.sol";
+import "./utils/HashUtils.sol";
 import "./utils/TransferUtils.sol";
 
 
-contract DeAuction is IDeAuction, PlatformUtils, TransferUtils {
+abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUtils {
     // todo flow describe
     // todo docstrings
     event Stake(address owner, uint128 value);
@@ -36,6 +37,10 @@ contract DeAuction is IDeAuction, PlatformUtils, TransferUtils {
     address public _aggregator;
     uint128 public _aggregatorStake;
 
+    DeAuctionGlobalConfig public _globalConfig;
+    uint32 public _subConfirmTime;
+    uint32 public _makeBidTime;
+
     DePhase public _phase;
     AuctionDetails public _details;
     uint128 public _totalStake;
@@ -43,13 +48,18 @@ contract DeAuction is IDeAuction, PlatformUtils, TransferUtils {
     uint128 _avgPrice;
     uint128 _avgValue;
 
-    uint128 _everValue;
-    uint128 _neverValue;
-    uint128 _aggregatorReward;
+    uint128 public _everValue;
+    uint128 public _neverValue;
+    uint128 public _aggregatorReward;
 
 
     modifier onlyAuction() {
         require(msg.sender == _auction, ErrorCodes.IS_NOT_AUCTION);
+        _;
+    }
+
+    modifier doUpdate() {
+        _update();
         _;
     }
 
@@ -70,8 +80,6 @@ contract DeAuction is IDeAuction, PlatformUtils, TransferUtils {
     }
 
 
-    // todo docstring
-    // todo Platform
     function onCodeUpgrade(TvmCell input) private {
         tvm.resetStorage();
         TvmSlice slice = input.toSlice();
@@ -84,9 +92,17 @@ contract DeAuction is IDeAuction, PlatformUtils, TransferUtils {
         TvmCell initialParams = slice.loadRef();
         DeAuctionConfig config;
         (_auction, config) = abi.decode(initialParams, (address, DeAuctionConfig));
-        (_description, _prices, _deviation, _aggregatorFee, _aggregator, _aggregatorStake) = config.unpack();
+        (DeAuctionInitConfig initConfig, DeAuctionGlobalConfig globalConfig) = config.unpack();
+        (_description, _prices, _deviation, _aggregatorFee, _aggregator, _aggregatorStake) = initConfig.unpack();
+        _globalConfig = globalConfig;
 
         _phase = DePhase.INITIALIZING;
+        _init(_globalConfig.initDetails);
+        IDeParticipant(_aggregator).onDeAuctionInit{
+            value: Gas.DE_AUCTION_ACTION_VALUE,
+            flag: MsgFlag.SENDER_PAYS_FEES,
+            bounce: false
+        }(_nonce, _aggregatorStake);
         IAuction(_auction).getDetails{
             value: 0,
             flag: MsgFlag.ALL_NOT_RESERVED,
@@ -95,18 +111,23 @@ contract DeAuction is IDeAuction, PlatformUtils, TransferUtils {
         }();
     }
 
+    function _init(TvmCell details) internal virtual;
+
     function onGetDetails(AuctionDetails details) public override onlyAuction inPhase(DePhase.INITIALIZING) {
-        // todo check if is too late to create deauction (or just wait for finishVoting)
-        // todo check that _prices.min >= quotingPrice
         _details = details;
-        if (details.confirmTime <= now + 3 days || details.quotingPrice > _prices.min) {  // todo 3 days
+        bool isOpenEnough = now + _globalConfig.subOpenDuration <= details.deBidTime;
+        bool isDeBidEnough = _globalConfig.subConfirmDuration + _globalConfig.makeBidDuration <= details.confirmTime - details.deBidTime;
+        _subConfirmTime = details.deBidTime;
+        _makeBidTime = _subConfirmTime + _globalConfig.subConfirmDuration;
+        if (!isOpenEnough || !isDeBidEnough || details.quotingPrice > _prices.min) {
             _phase = DePhase.LOSE;
+            // todo return stake immediately ?
         } else {
             _phase = DePhase.SUB_OPEN;
         }
     }
 
-    function stake(address owner, uint128 value, optional(uint256) priceHash) public override onlyDeParticipant(owner) {
+    function stake(address owner, uint128 value, optional(uint256) priceHash) public override onlyDeParticipant(owner) doUpdate {
         bool success = false;
         if (_phase == DePhase.SUB_OPEN) {
             emit Stake(owner, value);
@@ -123,7 +144,7 @@ contract DeAuction is IDeAuction, PlatformUtils, TransferUtils {
         }(_nonce, value, priceHash, success);
     }
 
-    function removeStake(address owner, uint128 value) public override onlyDeParticipant(owner) {
+    function removeStake(address owner, uint128 value) public override onlyDeParticipant(owner) doUpdate {
         bool success = false;
         if (_phase == DePhase.SUB_OPEN && owner != _aggregator) {
             emit RemoveStake(owner, value);
@@ -137,9 +158,9 @@ contract DeAuction is IDeAuction, PlatformUtils, TransferUtils {
         }(_nonce, value, success);
     }
 
-    function confirmPrice(address owner, uint128 price, uint128 value) public override onlyDeParticipant(owner) {
+    function confirmPrice(address owner, uint128 price, uint128 value) public override onlyDeParticipant(owner) doUpdate {
         bool success = false;
-        if (_phase == DePhase.SUB_CONFIRM && _inPriceRange(_prices, price)) {
+        if (_phase == DePhase.SUB_CONFIRM && _isInRange(price, _prices)) {
             emit ConfirmPrice(owner, price);
             _avgPrice = (_avgPrice * _avgValue + price * value) / (_avgValue + value);
             _avgValue += value;
@@ -152,8 +173,7 @@ contract DeAuction is IDeAuction, PlatformUtils, TransferUtils {
         }(_nonce, success);
     }
 
-    // todo auto-next phase
-    function finishVoting() public override onlyAggregator inPhase(DePhase.SUB_FINISH) cashBack {
+    function finishSubVoting() public override onlyAggregator inPhase(DePhase.SUB_FINISH) cashBack {
         uint128 minByLot = _totalStake / _details.minLotSize;
         if (minByLot > _prices.min) {
             // not enough stake to bid for full price range  // todo discuss
@@ -163,44 +183,56 @@ contract DeAuction is IDeAuction, PlatformUtils, TransferUtils {
         }
     }
 
-    function allowedPrice() public override returns (PriceRange allowed) {
+    function allowedPrice() public view override returns (PriceRange allowed) {
         uint128 delta = math.muldiv(_avgValue, _deviation, Constants.PERCENT_DENOMINATOR);
         uint128 min = math.max(_prices.min, _avgPrice - delta);
         uint128 max = math.min(_prices.max, _avgPrice + delta);
         return PriceRange(min, max);
     }
 
-    function _inPriceRange(PriceRange range, uint128 price) private pure returns (bool) {
-        return price >= range.min && price <= range.max;
+    /*
+    Calculates hash of bid that aggregator make in main auction
+    Can be used off-chain before `makeBid` and `removeBid` functions
+    @param price    Bid price (in `allowedPrice()` range)
+    @param salt     Random 256-bit value (please use really random number)
+    @return         256-bit hash
+    */
+    function calcBidHash(uint128 price, uint256 salt) public view override returns (uint256 hash) {
+        PriceRange allowed = allowedPrice();
+        require(_isInRange(price, allowed), 69);
+        uint128 amount = _totalStake / price;
+        return _calcBidHash(price, amount, address(this), salt);
     }
 
-    function makeBid(uint256 hash) public override onlyAggregator inPhase(DePhase.WAITING_BID) cashBack {
+    function makeBid(uint256 hash) public view override onlyAggregator inPhase(DePhase.WAITING_BID) cashBack {
 //        require(now > _details.openTime && now < _details.confirmationTime, 69);
         IAuction(_auction).makeBid{
             value: _details.deposit + Gas.DE_AUCTION_ACTION_VALUE,
             flag: MsgFlag.SENDER_PAYS_FEES,
-            bounce: true  // todo it is possible situation when it is time to close on no bounce and no callback
+            bounce: true
         }(hash);
     }
-
-    // todo calc bid hash
 
     function onMakeBid() public override onlyAuction {
         _phase = DePhase.BID_MADE;
         IAggregator(_aggregator).onMakeBid{value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false}();
     }
 
+    // is never called
     function onRemoveBid() public override onlyAuction { revert(); }
 
     function confirmBid(uint128 price, uint256 salt) public override onlyAggregator inPhase(DePhase.BID_MADE) {
         PriceRange allowed = allowedPrice();
-        require(_inPriceRange(allowed, price), 69);
+        require(_isInRange(price, allowed), 69);
         uint128 amount = _totalStake / price;
+        uint128 value = price * amount;
+        tvm.rawReserve(address(this).balance - msg.value - value, 2);
         IAuction(_auction).confirmBid{
-            value: price * amount + Gas.DE_AUCTION_ACTION_VALUE,
+            value: value + Gas.DE_AUCTION_ACTION_VALUE,
             flag: MsgFlag.SENDER_PAYS_FEES,
-            bounce: true  // todo it is possible situation when it is time to close on no bounce and no callback
+            bounce: true
         }(price, amount, salt);
+        msg.sender.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED, bounce: false});
     }
 
     function onConfirmBid() public override onlyAuction {
@@ -214,7 +246,7 @@ contract DeAuction is IDeAuction, PlatformUtils, TransferUtils {
         IAggregator(_aggregator).onWin{value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false}(price, amount);
     }
 
-    function pingAuctionFinish() public override {
+    function pingAuctionFinish() public view override {
         IAuction(_auction).updateAndGetPhase{
             value: 0,
             flag: MsgFlag.REMAINING_GAS,
@@ -223,7 +255,7 @@ contract DeAuction is IDeAuction, PlatformUtils, TransferUtils {
         }();
     }
 
-    function onPingAuctionFinish(Phase /*before*/, Phase next) public override onlyAuction inPhase(DePhase.BID_CONFIRMED) {
+    function onPingAuctionFinish(Phase /*before*/, Phase next) public view override onlyAuction inPhase(DePhase.BID_CONFIRMED) {
         if (next == Phase.FINISH) {
             IAuction(_auction).getWinner{
                 value: 0,
@@ -241,14 +273,25 @@ contract DeAuction is IDeAuction, PlatformUtils, TransferUtils {
         // onWin case is called automatically by Auction
     }
 
-    function onNeverTransfer(uint128 value) public override onlyAuction inPhase(DePhase.WIN) {
-        // todo only elector
+    function _onNeverTransfer(uint128 value) internal inPhase(DePhase.WIN) {
         _phase = DePhase.DISTRIBUTION;
         _aggregatorReward = math.muldiv(value, _aggregatorFee, Constants.PERCENT_DENOMINATOR);
         _neverValue = value - _aggregatorReward;
     }
 
-    function slash() public override {
+    function checkAggregator() public view override returns (bool isFair) {
+        if (now > _details.confirmTime && _phase < DePhase.BID_MADE) {
+            // aggregator forgot to make bid
+            return false;
+        }
+        if (now > _details.finishTime && _phase < DePhase.BID_CONFIRMED) {
+            // aggregator forgot to confirm bid
+            return false;
+        }
+        return true;
+    }
+
+    function slash() public override cashBack {
         bool isFair = checkAggregator();
         if (!isFair) {
             _slash();
@@ -257,19 +300,7 @@ contract DeAuction is IDeAuction, PlatformUtils, TransferUtils {
 
     function _slash() private {
         _phase = DePhase.SLASHED;
-    }
-
-    function checkAggregator() public override returns (bool) {
-        Phase auctionPhase = auctionPhase();
-        if (auctionPhase == Phase.CONFIRM && _phase < DePhase.BID_MADE) {
-            // aggregator forgot to make bid
-            return false;
-        }
-        if (auctionPhase == Phase.FINISH && _phase < DePhase.BID_CONFIRMED) {
-            // aggregator forgot to confirm bid
-            return false;
-        }
-        return true;
+        _totalStake -= _aggregatorStake;
     }
 
     function claim(address owner, uint128 value) public override onlyDeParticipant(owner) {
@@ -293,35 +324,38 @@ contract DeAuction is IDeAuction, PlatformUtils, TransferUtils {
         if (success) {
             emit Claim(owner, everValue, neverValue);
             if (neverValue > 0) {
-                // todo send never
+                _sendNever(owner, neverValue);
             }
         }
         IDeParticipant(msg.sender).onClaim{
-            value: value,
+            value: everValue,
             flag: MsgFlag.REMAINING_GAS,
             bounce: false
         }(_nonce, success);
     }
 
-    function auctionPhase() public view returns (Phase) {
-        require(_phase != DePhase.INITIALIZING, 69);
-        return Phase.OPEN;
-        // todo
-//        if (now < _times.open) {
-//            return Phase.WAIT;
-//        } else if (now >= _times.open && now < _times.confirmation) {
-//            return Phase.OPEN;
-//        } else if (now >= _times.confirmation && now < _times.finish) {
-//            return Phase.CONFIRM;
-//        } else {
-//            return Phase.FINISH;
-//        }
+    function _sendNever(address receiver, uint128 value) internal virtual;
+
+    function _update() private {
+        if (_phase == DePhase.SUB_OPEN && now >= _subConfirmTime) {
+            _phase = DePhase.SUB_CONFIRM;
+        }
+        if (_phase == DePhase.SUB_CONFIRM && now >= _makeBidTime) {
+            _phase = DePhase.SUB_FINISH;
+        }
     }
 
-    onBounce(TvmSlice body) external pure {
+    function _isInRange(uint128 price, PriceRange range) private pure returns (bool) {
+        return price >= range.min && price <= range.max;
+    }
+
+
+    onBounce(TvmSlice body) external view {
         uint32 functionId = body.decode(uint32);
         if (functionId == tvm.functionId(IAuction.makeBid)) {
-            // todo wrong phase
+            _aggregator.transfer({value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false});
+        } else if (functionId == tvm.functionId(IAuction.confirmBid)) {
+            // do nothing, keep value in DeAuction
         }
     }
 

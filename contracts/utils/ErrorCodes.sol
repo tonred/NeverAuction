@@ -25,4 +25,7 @@ library ErrorCodes {
     // DeAuction
     uint16 constant IS_NOT_AGGREGATOR = 1000;
 
+    uint16 constant IS_NOT_TOKEN_ROOT = 1000; // todo last DeAuction error
+    uint16 constant IS_NOT_TOKEN_WALLET = 1000; // todo last DeAuction error
+
 }

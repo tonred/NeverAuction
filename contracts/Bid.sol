@@ -11,9 +11,9 @@ import "@broxus/contracts/contracts/libraries/MsgFlag.sol";
 
 
 contract Bid {
-    address public static _auction;
-    uint256 public static _hash;
-    address public _owner;
+    address static _auction;
+    uint256 static _hash;
+    address _owner;
 
     modifier onlyAuction() {
         require(msg.sender == _auction, ErrorCodes.IS_NOT_AUCTION);
@@ -24,8 +24,8 @@ contract Bid {
         _owner = owner;
     }
 
-    function getDetails() public view responsible returns (address, address, uint256) {
-        return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} (_auction, _owner, _hash);
+    function getDetails() public view responsible returns (address, uint256, address) {
+        return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} (_auction, _hash, _owner);
     }
 
     function remove() public view responsible onlyAuction returns (uint256, address) {

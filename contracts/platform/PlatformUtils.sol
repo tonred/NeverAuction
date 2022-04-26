@@ -23,9 +23,14 @@ abstract contract PlatformUtils {
         return calcAddress(stateInit);
     }
 
+    function _buildAuctionStateInit(uint64 nonce) internal view returns (TvmCell) {
+        TvmCell initialData = abi.encode(nonce);
+        return _buildPlatformStateInit(PlatformType.AUCTION, initialData);
+    }
+
     function _buildDeAuctionStateInit(uint64 nonce) internal view returns (TvmCell) {
         TvmCell initialData = abi.encode(nonce);
-        return _buildPlatformStateInit(PlatformType.DE_PARTICIPANT, initialData);
+        return _buildPlatformStateInit(PlatformType.DE_AUCTION, initialData);
     }
 
     function _buildDeParticipantStateInit(address owner) internal view returns (TvmCell) {

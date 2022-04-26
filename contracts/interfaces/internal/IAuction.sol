@@ -14,10 +14,11 @@ interface IAuction {
     function update() external;
 
     function makeBid(uint256 hash) external;
+    function makeDeBid(uint64 nonce, uint256 hash) external;
     function removeBid(uint256 hash) external view;
     function onRemoveBid(uint256 hash, address owner) external;
     function confirmBid(uint128 price, uint128 amount, uint256 salt) external view;
     function onConfirmBid(uint256 hash, BidData data, uint128 msgValue) external;
-    function calcBidHash(uint128 price, uint128 amount, address owner, uint256 salt) external pure returns (uint256);
+    function calcBidHash(uint128 price, uint128 amount, address owner, uint256 salt) external view returns (uint256 hash);
     function finish() external;
 }
