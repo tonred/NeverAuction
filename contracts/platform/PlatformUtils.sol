@@ -23,12 +23,12 @@ abstract contract PlatformUtils {
         return calcAddress(stateInit);
     }
 
-    function _buildDeAuctionStateInit(uint64 nonce) private view returns (TvmCell) {
+    function _buildDeAuctionStateInit(uint64 nonce) internal view returns (TvmCell) {
         TvmCell initialData = abi.encode(nonce);
         return _buildPlatformStateInit(PlatformType.DE_PARTICIPANT, initialData);
     }
 
-    function _buildDeParticipantStateInit(address owner) private view returns (TvmCell) {
+    function _buildDeParticipantStateInit(address owner) internal view returns (TvmCell) {
         TvmCell initialData = abi.encode(owner);
         return _buildPlatformStateInit(PlatformType.DE_PARTICIPANT, initialData);
     }

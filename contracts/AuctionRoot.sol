@@ -94,16 +94,15 @@ contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils 
             return;
         }
 
-        // todo platform
-        // todo create de participant
-//        TvmCell stateInit = _buildDeAuctionStateInit(_nonce++);
-//        address deAuction = new DeAuction{
-//            stateInit: stateInit,
-//            value: 0,
-//            flag: MsgFlag.REMAINING_GAS,
-//            bounce: false
-//        }(config);
-//        emit NewDeAuction(_auction, deAuction);
+        TvmCell stateInit = _buildDeAuctionStateInit(_nonce++);
+        TvmCell initialParams = abi.encode(_auction, config);
+        address deAuction = new Platform{
+            stateInit: stateInit,
+            value: 0,
+            flag: MsgFlag.REMAINING_GAS,
+            bounce: false
+        }(_deAuctionCode, initialParams, owner);
+        emit NewDeAuction(_auction, deAuction);
     }
 
     function onFinish(bool success, BidData winner) public override onlyAuction {

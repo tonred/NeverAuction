@@ -25,8 +25,8 @@ contract DeAuction is IDeAuction, PlatformUtils, TransferUtils {
     event ConfirmPrice(address owner, uint128 price);
     event Claim(address owner, uint128 everValue, uint128 neverValue);
 
-    address public static _root;
-    uint64 public static _nonce;
+    address public _root;
+    uint64 public _nonce;
 
     address public _auction;
     string public _description;
@@ -82,7 +82,8 @@ contract DeAuction is IDeAuction, PlatformUtils, TransferUtils {
         _nonce = abi.decode(initialData, uint64);
 
         TvmCell initialParams = slice.loadRef();
-        DeAuctionConfig config = abi.decode(initialParams, DeAuctionConfig);
+        DeAuctionConfig config;
+        (_auction, config) = abi.decode(initialParams, (address, DeAuctionConfig));
         (_description, _prices, _deviation, _aggregatorFee, _aggregator, _aggregatorStake) = config.unpack();
 
         _phase = DePhase.INITIALIZING;
@@ -95,10 +96,15 @@ contract DeAuction is IDeAuction, PlatformUtils, TransferUtils {
     }
 
     function onGetDetails(AuctionDetails details) public override onlyAuction inPhase(DePhase.INITIALIZING) {
+        // todo check if is too late to create deauction (or just wait for finishVoting)
+        // todo check that _prices.min >= quotingPrice
         _details = details;
-        _phase = DePhase.SUB_OPEN;
+        if (details.confirmTime <= now + 3 days || details.quotingPrice > _prices.min) {  // todo 3 days
+            _phase = DePhase.LOSE;
+        } else {
+            _phase = DePhase.SUB_OPEN;
+        }
     }
-
 
     function stake(address owner, uint128 value, optional(uint256) priceHash) public override onlyDeParticipant(owner) {
         bool success = false;
@@ -186,7 +192,7 @@ contract DeAuction is IDeAuction, PlatformUtils, TransferUtils {
 
     function onRemoveBid() public override onlyAuction { revert(); }
 
-    function confirmBid(uint128 price, uint256 salt) public override onlyAggregator inPhase(DePhase.BID_MADE) cashBack {
+    function confirmBid(uint128 price, uint256 salt) public override onlyAggregator inPhase(DePhase.BID_MADE) {
         PriceRange allowed = allowedPrice();
         require(_inPriceRange(allowed, price), 69);
         uint128 amount = _totalStake / price;

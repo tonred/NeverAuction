@@ -107,7 +107,7 @@
 			"inputs": [
 				{"name":"price","type":"uint128"},
 				{"name":"amount","type":"uint128"},
-				{"name":"owner","type":"address"},
+				{"name":"sender","type":"address"},
 				{"name":"salt","type":"uint256"}
 			],
 			"outputs": [

@@ -49,6 +49,7 @@ contract Auction is IAuction, TransferUtils {
     }
 
     modifier withUpdate() {
+        // todo maybe trigger finish from outside ?
         bool process = _update();
         if (process) {
             _;
@@ -114,7 +115,7 @@ contract Auction is IAuction, TransferUtils {
 
 
     /*
-    Locally update status and get it
+    Update phase, get phase before and after this update
     */
     function updateAndGetPhase() public responsible override returns (Phase before, Phase next) {
         before = _phase;
@@ -123,7 +124,7 @@ contract Auction is IAuction, TransferUtils {
     }
 
     /*
-    Update status of contract, then return all left gas
+    Update phase of contract
     */
     function update() public override withUpdate {
         msg.sender.transfer({value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false});
@@ -175,9 +176,10 @@ contract Auction is IAuction, TransferUtils {
 
     /*
     Confirm bid
-    @param value    Real value of bid
+    @param price    Real price for 1 piece
+    @param amount   Amount to buy
     @param salt     Random value that was used to calculate hash in `calcBidHash` method
-    @value          You must send all tokens of your bid, can be calculated as (bid_value + fee - deposit)
+    @value          You must send all value of your bid, can be calculated as [price * amount + fee - deposit]
     */
     function confirmBid(uint128 price, uint128 amount, uint256 salt) public view override withUpdate inPhase(Phase.CONFIRM) {
         require(price >= _quotingPrice, 69);
@@ -209,18 +211,21 @@ contract Auction is IAuction, TransferUtils {
 
     /*
     Calculates hash of bid
-    Can be used off-chain before `makeBid` function
-    @param value        Bid value
-    @param participant  Address of participant
-    @param salt         Random 256-bit value (please use really random number)
-    @return             256-bit hash
+    Can be used off-chain before `makeBid` and `removeBid` functions
+    @param price    Bid price
+    @param amount   Amount to buy
+    @param sender   Address sender
+    @param salt     Random 256-bit value (please use really random number)
+    @return         256-bit hash
     */
-    function calcBidHash(uint128 price, uint128 amount, address owner, uint256 salt) public pure override returns (uint256) {
-        TvmCell data = abi.encode(price, amount, owner, salt);
+    function calcBidHash(uint128 price, uint128 amount, address sender, uint256 salt) public pure override returns (uint256) {
+        TvmCell data = abi.encode(price, amount, sender, salt);
         return tvm.hash(data);
     }
 
     function finish() public override {
+//    function finish() public override withUpdate inPhase(Phase.FINISH) {
+        // todo trigger it in DeAuction if winner == address(this)
         require(msg.sender == address(this), ErrorCodes.IS_NOT_SELF);
         bool success = true;
         if (_first.owner.value == 0) {
@@ -258,7 +263,7 @@ contract Auction is IAuction, TransferUtils {
 
     /***********
      * PRIVATE *
-     **********/
+     ***********/
 
     function _update() private returns (bool) {
         if (_phase == Phase.OPEN && now >= _confirmTime) {
