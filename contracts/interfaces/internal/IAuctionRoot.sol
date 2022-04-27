@@ -12,6 +12,7 @@ interface IAuctionRoot {
     function changeAuctionConfig(AuctionConfig auctionConfig) external;
     function changeDeAuctionGlobalConfig(DeAuctionGlobalConfig deAuctionGlobalConfig) external;
     function createAuction(uint128 minLotSize, uint128 quotingPrice) external;
+    function createDeParticipant() external;
     function createDeAuction(address owner, DeAuctionInitConfig initConfig) external;
     function onFinish(bool success, BidData winner) external;
 }

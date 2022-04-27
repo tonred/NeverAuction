@@ -19,6 +19,7 @@ import "./utils/TransferUtils.sol";
 
 contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils {
     event NewAuction(address auction);
+    event NewDeParticipant(address deParticipant);
     event NewDeAuction(address auction, address deAuction);
 
     address public static _elector;
@@ -89,6 +90,16 @@ contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils 
         }(_auctionCode, initialParams, address(0));
         emit NewAuction(_auction);
         _isActionNow = true;
+    }
+
+    function createDeParticipant() public override cashBack {
+        TvmCell stateInit = _buildDeParticipantStateInit(msg.sender);
+        TvmCell initialParams;
+        address deParticipant = new Platform{
+            stateInit: stateInit,
+            value: Gas.DEPLOY_DE_PARTICIPANT_VALUE
+        }(_deParticipantCode, initialParams, address(0));
+        emit NewDeParticipant(deParticipant);
     }
 
     function createDeAuction(address owner, DeAuctionInitConfig initConfig) public override onlyDeParticipant(owner) {

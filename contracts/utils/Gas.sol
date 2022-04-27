@@ -12,6 +12,7 @@ library Gas {
 
     // Auction Root
     uint128 constant DEPLOY_AUCTION_VALUE = 1 ton;
+    uint128 constant DEPLOY_DE_PARTICIPANT_VALUE = 1 ton;
 
     // DeAuction
     uint128 constant DE_AUCTION_ACTION_VALUE = 1 ton;

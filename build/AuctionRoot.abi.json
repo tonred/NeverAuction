@@ -57,6 +57,13 @@
 			]
 		},
 		{
+			"name": "createDeParticipant",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "createDeAuction",
 			"inputs": [
 				{"name":"owner","type":"address"},
@@ -180,6 +187,14 @@
 			"name": "NewAuction",
 			"inputs": [
 				{"name":"auction","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "NewDeParticipant",
+			"inputs": [
+				{"name":"deParticipant","type":"address"}
 			],
 			"outputs": [
 			]
