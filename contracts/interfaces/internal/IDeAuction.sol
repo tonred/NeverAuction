@@ -21,7 +21,7 @@ interface IDeAuction is IParticipant {
     function onConfirmBid() external override;
     function onWin(uint128 price, uint128 amount) external override;
     function pingAuctionFinish() external view;
-    function onPingAuctionFinish(Phase before, Phase next) external view;
+    function onPingAuctionFinish(Phase phase) external view;
     function onGetWinner(BidData winner) external;
     function checkAggregator() external view returns (bool isFair);
     function slash() external;

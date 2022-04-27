@@ -16,6 +16,7 @@ library Gas {
 
     // DeAuction
     uint128 constant DE_AUCTION_ACTION_VALUE = 1 ton;
+    uint128 constant FINISH_AUCTION = 1 ton;
     // todo lasts
     uint128 constant DEPLOY_WALLET_GRAMS = 1 ton;
     uint128 constant DEPLOY_WALLET_VALUE = 2 ton;  // more than DEPLOY_WALLET_GRAMS

@@ -17,7 +17,6 @@ library ErrorCodes {
     uint16 constant LOW_DEPOSIT_VALUE = 1000;
     uint16 constant TOO_SHORT_DURATION = 1000;
     uint16 constant LOW_MSG_VALUE = 1000;  // todo up ?
-    uint16 constant IS_NOT_SELF = 1000;  // todo up ?
 
     // Auction Root (todo up)
     uint16 constant AUCTION_IS_ALREADY_RUNNING = 1000;

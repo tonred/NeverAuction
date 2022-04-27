@@ -247,7 +247,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
     }
 
     function pingAuctionFinish() public view override {
-        IAuction(_auction).updateAndGetPhase{
+        IAuction(_auction).getPhase{
             value: 0,
             flag: MsgFlag.REMAINING_GAS,
             bounce: false,
@@ -255,11 +255,19 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
         }();
     }
 
-    function onPingAuctionFinish(Phase /*before*/, Phase next) public view override onlyAuction inPhase(DePhase.BID_CONFIRMED) {
-        if (next == Phase.FINISH) {
+    function onPingAuctionFinish(Phase phase) public view override onlyAuction inPhase(DePhase.BID_CONFIRMED) {
+        _reserve();
+        if (phase == Phase.FINISH) {
+            IAuction(_auction).finish{
+                value: Gas.FINISH_AUCTION,
+                flag: MsgFlag.SENDER_PAYS_FEES,
+                bounce: false
+            }();
+        }
+        if (phase == Phase.FINISH || phase == Phase.DONE) {
             IAuction(_auction).getWinner{
                 value: 0,
-                flag: MsgFlag.REMAINING_GAS,
+                flag: MsgFlag.ALL_NOT_RESERVED,
                 bounce: false,
                 callback: onGetWinner
             }();

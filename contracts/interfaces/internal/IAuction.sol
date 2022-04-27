@@ -10,9 +10,6 @@ interface IAuction {
     function getPhase() external view responsible returns (Phase phase);
     function getWinner() external view responsible returns (BidData winner);
 
-    function updateAndGetPhase() external responsible returns (Phase before, Phase next);
-    function update() external;
-
     function makeBid(uint256 hash) external;
     function makeDeBid(uint64 nonce, uint256 hash) external;
     function removeBid(uint256 hash) external view;

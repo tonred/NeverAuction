@@ -5,5 +5,6 @@ enum Phase {
     OPEN,       // 0
     DE_BID,     // 1
     CONFIRM,    // 2
-    FINISH      // 3
+    FINISH,     // 3
+    DONE        // 4
 }

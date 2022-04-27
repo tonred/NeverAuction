@@ -33,7 +33,6 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
     uint128 public _deposit;
     TvmCell public _bidCode;
 
-    Phase public _phase;
     uint32 public _deBidTime;
     uint32 public _confirmTime;
     uint32 public _finishTime;
@@ -41,6 +40,7 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
     uint64 _bidsCount;
     uint64 _confirmBidsCount;
 
+    bool public _finished;
     BidData public _winner;
     BidData _first;
     BidData _second;
@@ -57,18 +57,8 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
         _;
     }
 
-    modifier withUpdate() {
-        // todo maybe trigger finish from outside ?
-        bool process = _update();
-        if (process) {
-            _;
-        } else {
-            msg.sender.transfer({value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false});
-        }
-    }
-
     modifier inPhase(Phase phase) {
-        require(_phase == phase, ErrorCodes.WRONG_PHASE);
+        require(phase == _phase(), ErrorCodes.WRONG_PHASE);
         _;
     }
 
@@ -104,7 +94,6 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
         _deposit = config.deposit;
         _bidCode = config.bidCode;
 
-        _phase = Phase.OPEN;
         _deBidTime = now + config.openDuration;
         _confirmTime = _deBidTime + config.deBidDuration;
         _finishTime = _confirmTime + config.confirmDuration;
@@ -117,7 +106,7 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
     }
 
     function getPhase() public view responsible override returns (Phase phase) {
-        return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} _phase;
+        return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} _phase();
     }
 
     function getWinner() public view responsible override returns (BidData winner) {
@@ -126,31 +115,15 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
 
 
     /*
-    Update phase, get phase before and after this update
-    */
-    function updateAndGetPhase() public responsible override returns (Phase before, Phase next) {
-        before = _phase;
-        _update();
-        return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} (before, _phase);
-    }
-
-    /*
-    Update phase of contract
-    */
-    function update() public override withUpdate {
-        msg.sender.transfer({value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false});
-    }
-
-    /*
     Make bid
     @param hash     Bid hash (can be calculated via `calcBidHash` method locally)
     @value          Must be greater than or equal to the deposit
     */
-    function makeBid(uint256 hash) public override withUpdate inPhase(Phase.OPEN) {
+    function makeBid(uint256 hash) public override inPhase(Phase.OPEN) {
         _makeBid(hash);
     }
 
-    function makeDeBid(uint64 nonce, uint256 hash) public override onlyDeAuction(nonce) withUpdate inPhase(Phase.DE_BID) {
+    function makeDeBid(uint64 nonce, uint256 hash) public override onlyDeAuction(nonce) inPhase(Phase.DE_BID) {
         _makeBid(hash);
     }
 
@@ -175,7 +148,7 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
     @param hash     Bid hash (can be calculated via `calcBidHash` method locally)
     @value          More than `Gas.REMOVE_BID_VALUE`
     */
-    function removeBid(uint256 hash) public view override withUpdate inPhase(Phase.OPEN) cashBack {
+    function removeBid(uint256 hash) public view override inPhase(Phase.OPEN) cashBack {
         address bid = _bidAddress(hash);
         Bid(bid).remove{
             value: Gas.REMOVE_BID_VALUE,
@@ -200,7 +173,7 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
     @param salt     Random value that was used to calculate hash in `calcBidHash` method
     @value          You must send all value of your bid, can be calculated as [price * amount + fee - deposit]
     */
-    function confirmBid(uint128 price, uint128 amount, uint256 salt) public view override withUpdate inPhase(Phase.CONFIRM) {
+    function confirmBid(uint128 price, uint128 amount, uint256 salt) public view override inPhase(Phase.CONFIRM) {
         require(price >= _quotingPrice, 69);
         require(amount >= _minLotSize, 69);
         uint128 value = price * amount;
@@ -225,6 +198,7 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
                 bounce: false
             }();
         }
+        _confirmBidsCount++;
         _updateResults(data);
     }
 
@@ -243,10 +217,8 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
         return _calcBidHash(price, amount, sender, salt);
     }
 
-    function finish() public override {
-//    function finish() public override withUpdate inPhase(Phase.FINISH) {
-        // todo trigger it in DeAuction if winner == address(this)
-        require(msg.sender == address(this), ErrorCodes.IS_NOT_SELF);
+    function finish() public override inPhase(Phase.FINISH) {
+        tvm.accept();
         bool success = true;
         if (_first.owner.value == 0) {
             // no winner
@@ -273,6 +245,7 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
                 bounce: false
             }(_winner.price, _winner.amount);
         }
+        _finished = true;
         emit Finish(success, _winner);
         IAuctionRoot(_root).onFinish{
             value: 0,
@@ -285,20 +258,18 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
      * PRIVATE *
      ***********/
 
-    function _update() private returns (bool) {
-        if (_phase == Phase.OPEN && now >= _confirmTime) {
-            if (_bidsCount > 0) {
-                _phase = Phase.CONFIRM;
-            } else {
-                _sendFinish();
-                return false;
-            }
+    function _phase() private view returns (Phase) {
+        if (_finished) {
+            return Phase.DONE;
+        } else if (now >= _finishTime || (now >= _confirmTime && _bidsCount == _confirmBidsCount)) {
+            return Phase.FINISH;
+        } else if (now >= _confirmTime) {
+            return Phase.CONFIRM;
+        } else if (now >= _deBidTime) {
+            return Phase.DE_BID;
+        } else {
+            return Phase.OPEN;
         }
-        if (_phase == Phase.CONFIRM && now >= _finishTime) {
-            _sendFinish();
-            return false;
-        }
-        return true;
     }
 
     function _updateResults(BidData data) private {
@@ -314,15 +285,6 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
         } else {
             _returnBid(data);
         }
-        // if all bids are confirmed
-        if (_confirmBidsCount == _bidsCount) {
-            _sendFinish();
-        }
-    }
-
-    function _sendFinish() private {
-        _phase = Phase.FINISH;
-        IAuction(this).finish{value: 0, flag: MsgFlag.ALL_NOT_RESERVED, bounce: false}();
     }
 
     function _returnBid(BidData data) private pure {
