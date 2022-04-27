@@ -94,6 +94,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
         (_auction, config) = abi.decode(initialParams, (address, DeAuctionConfig));
         (DeAuctionInitConfig initConfig, DeAuctionGlobalConfig globalConfig) = config.unpack();
         (_description, _prices, _deviation, _aggregatorFee, _aggregator, _aggregatorStake) = initConfig.unpack();
+        _totalStake = _aggregatorStake;
         _globalConfig = globalConfig;
 
         _phase = DePhase.INITIALIZING;
@@ -121,7 +122,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
         _makeBidTime = _subConfirmTime + _globalConfig.subConfirmDuration;
         if (!isOpenEnough || !isDeBidEnough || details.quotingPrice > _prices.min) {
             _phase = DePhase.LOSE;
-            // todo return stake immediately ?
+            // dont return stake here in order to prevent double spending if aggregator call `claim` in parallel tx
         } else {
             _phase = DePhase.SUB_OPEN;
         }
