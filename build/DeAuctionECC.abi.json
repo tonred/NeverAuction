@@ -414,7 +414,7 @@
 		{"components":[{"name":"fee","type":"uint128"},{"name":"deposit","type":"uint128"},{"name":"deBidTime","type":"uint32"},{"name":"confirmTime","type":"uint32"},{"name":"finishTime","type":"uint32"},{"name":"minLotSize","type":"uint128"},{"name":"quotingPrice","type":"uint128"}],"name":"_details","type":"tuple"},
 		{"name":"_totalStake","type":"uint128"},
 		{"name":"_avgPrice","type":"uint128"},
-		{"name":"_avgValue","type":"uint128"},
+		{"name":"_avgStake","type":"uint128"},
 		{"name":"_everValue","type":"uint128"},
 		{"name":"_neverValue","type":"uint128"},
 		{"name":"_aggregatorReward","type":"uint128"},

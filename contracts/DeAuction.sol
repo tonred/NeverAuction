@@ -46,7 +46,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
     uint128 public _totalStake;
 
     uint128 _avgPrice;
-    uint128 _avgValue;
+    uint128 _avgStake;
 
     uint128 public _everValue;
     uint128 public _neverValue;
@@ -163,8 +163,11 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
         bool success = false;
         if (_phase == DePhase.SUB_CONFIRM && _isInRange(price, _prices)) {
             emit ConfirmPrice(owner, price);
-            _avgPrice = (_avgPrice * _avgValue + price * value) / (_avgValue + value);
-            _avgValue += value;
+            _avgPrice = uint128(
+                (uint256(_avgPrice) * _avgStake + price * value) /
+                (_avgStake + value)
+            );
+            _avgStake += value;
             success = true;
         }
         IDeParticipant(msg.sender).onConfirmPrice{
@@ -174,18 +177,21 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
         }(_nonce, success);
     }
 
-    function finishSubVoting() public override onlyAggregator inPhase(DePhase.SUB_FINISH) cashBack {
-        uint128 minByLot = _totalStake / _details.minLotSize;
-        if (minByLot > _prices.min) {
-            // not enough stake to bid for full price range  // todo discuss
+    function finishSubVoting() public override inPhase(DePhase.SUB_FINISH) cashBack {
+        uint128 minStake = _details.minLotSize * _prices.max;
+        if (_totalStake < minStake) {
+            // not enough stake to bid for all price range
             _phase = DePhase.LOSE;
         } else {
             _phase = DePhase.WAITING_BID;
+            if (_avgStake == 0) {
+                _avgPrice = uint128((uint256(_prices.min) + _prices.max) / 2);
+            }
         }
     }
 
     function allowedPrice() public view override returns (PriceRange allowed) {
-        uint128 delta = math.muldiv(_avgValue, _deviation, Constants.PERCENT_DENOMINATOR);
+        uint128 delta = math.muldiv(_avgPrice, _deviation, Constants.PERCENT_DENOMINATOR);
         uint128 min = math.max(_prices.min, _avgPrice - delta);
         uint128 max = math.min(_prices.max, _avgPrice + delta);
         return PriceRange(min, max);
