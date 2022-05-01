@@ -24,8 +24,8 @@ const main = async () => {
     constructorParams: {
       elector: tempElector.address,
       auctionConfig: {
-        fee: 2e9,
-        deposit: 2e9,
+        fee: 1e9,
+        deposit: 2e9,             // 1000e9
         openDuration: 60,         // 7 days
         deBidDuration: 60,        // 2 days
         confirmDuration: 60,      // 2 days
@@ -35,7 +35,7 @@ const main = async () => {
         subOpenDuration: 30,      // 1 days
         subConfirmDuration: 30,   // 1 days
         makeBidDuration: 30,      // 1 days
-        initDetails: 'te6ccgEBAQEAKAAASxYPpw2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQ',  // todo python script for encoding
+        initDetails: 'te6ccgEBAQEAKAAASxYPpw2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQ',  // todo python script for encoding | see contracts/utils/build_init_details.py
       },
     },
     initParams: {

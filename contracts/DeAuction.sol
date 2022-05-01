@@ -64,7 +64,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
     }
 
     modifier inPhase(DePhase phase) {
-        require(_phase == phase, 69);
+        require(_phase == phase, ErrorCodes.WRONG_PHASE);
         _;
     }
 
@@ -206,13 +206,12 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
     */
     function calcBidHash(uint128 price, uint256 salt) public view override returns (uint256 hash) {
         PriceRange allowed = allowedPrice();
-        require(_isInRange(price, allowed), 69);
+        require(_isInRange(price, allowed), ErrorCodes.PRICE_OUT_OF_RANGE);
         uint128 amount = _totalStake / price;
         return _calcBidHash(price, amount, address(this), salt);
     }
 
     function makeBid(uint256 hash) public view override onlyAggregator inPhase(DePhase.WAITING_BID) cashBack {
-//        require(now > _details.openTime && now < _details.confirmationTime, 69);
         IAuction(_auction).makeBid{
             value: _details.deposit + Gas.DE_AUCTION_ACTION_VALUE,
             flag: MsgFlag.SENDER_PAYS_FEES,
@@ -230,7 +229,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
 
     function confirmBid(uint128 price, uint256 salt) public override onlyAggregator inPhase(DePhase.BID_MADE) {
         PriceRange allowed = allowedPrice();
-        require(_isInRange(price, allowed), 69);
+        require(_isInRange(price, allowed), ErrorCodes.PRICE_OUT_OF_RANGE);
         uint128 amount = _totalStake / price;
         uint128 value = price * amount;
         tvm.rawReserve(address(this).balance - msg.value - value, 2);
@@ -266,7 +265,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
         _reserve();
         if (phase == Phase.FINISH) {
             IAuction(_auction).finish{
-                value: Gas.FINISH_AUCTION,
+                value: Gas.DE_AUCTION_PING_FINISH_VALUE,
                 flag: MsgFlag.SENDER_PAYS_FEES,
                 bounce: false
             }();

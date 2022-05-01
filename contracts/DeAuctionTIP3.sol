@@ -46,13 +46,13 @@ contract DeAuctionTIP3 is DeAuction, IAcceptTokensTransferCallback {
     function _sendNever(address receiver, uint128 value) internal override {
         TvmCell empty;
         ITokenWallet(_neverWallet).transfer{
-            value: Gas.TRANSFER_VALUE,
+            value: Gas.TRANSFER_TIP3_VALUE,
             flag: MsgFlag.SENDER_PAYS_FEES,
             bounce: false
         }(
             value,                      // amount
             receiver,                   // recipient
-            Gas.DEPLOY_WALLET_VALUE,    // deployWalletValue
+            Gas.DEPLOY_WALLET_GRAMS,    // deployWalletValue
             receiver,                   // remainingGasTo
             false,                      // notify
             empty                       // payload

@@ -103,7 +103,9 @@ contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils,
 
 
     function createAuction(uint128 minLotSize, uint128 quotingPrice) public override onlyElector cashBack {
-        require(!_isActionNow, ErrorCodes.AUCTION_IS_ALREADY_RUNNING);
+        require(!_isActionNow, ErrorCodes.ALREADY_RUNNING);
+        require(_auctionConfig.fee > Gas.DEPLOY_BID_VALUE, ErrorCodes.LOW_FEE_VALUE);
+        require(_auctionConfig.deposit > _auctionConfig.fee, ErrorCodes.LOW_DEPOSIT_VALUE);
         TvmCell stateInit = _buildAuctionStateInit(_nonce++);
         TvmCell initialParams = abi.encode(_auctionConfig, minLotSize, quotingPrice);
         _auction = new Platform{

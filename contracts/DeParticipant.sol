@@ -24,25 +24,26 @@ contract DeParticipant is IDeParticipant, PlatformUtils, TransferUtils {
     mapping(address => optional(uint256)) public _hashes;
 
 
+
+    modifier onlyOwner() {
+        require(msg.sender == _owner, ErrorCodes.IS_NOT_OWNER);
+        _;
+    }
+
+    modifier onlyDeAuction(uint64 nonce) {
+        address deAuction = _deAuctionAddress(nonce);
+        require(msg.sender == deAuction, ErrorCodes.IS_NOT_DE_AUCTION);
+        _;
+    }
+
     modifier withLock() {
-        require(_lock == false, 69);
+        require(_lock == false, ErrorCodes.LOCKED);
         _lock = true;
         _;
     }
 
     modifier unlock() {
         _lock = false;
-        _;
-    }
-
-    modifier onlyOwner() {
-        require(msg.sender == _owner, 69);
-        _;
-    }
-
-    modifier onlyDeAuction(uint64 nonce) {
-        address deAuction = _deAuctionAddress(nonce);
-        require(msg.sender == deAuction, 69);
         _;
     }
 
@@ -65,7 +66,7 @@ contract DeParticipant is IDeParticipant, PlatformUtils, TransferUtils {
         uint128 fee,
         uint128 value
     ) public view override onlyOwner cashBack {
-        require(value > 0, 69);
+        require(value > 0, ErrorCodes.LOW_VALUE);
         DeAuctionInitConfig initConfig = DeAuctionInitConfig(description, prices, deviation, fee, _owner, value);
         IAuctionRoot(_root).createDeAuction{
             value: value + Gas.DE_AUCTION_INIT_VALUE,
@@ -80,7 +81,7 @@ contract DeParticipant is IDeParticipant, PlatformUtils, TransferUtils {
     }
 
     function stake(address deAuction, uint128 value, optional(uint256) priceHash) public view override onlyOwner withLock cashBack {
-        require(value > 0, 69);
+        require(value > 0, ErrorCodes.LOW_VALUE);
         IDeAuction(deAuction).stake{
             value: value + Gas.DE_PARTICIPANT_ACTION_VALUE,
             flag: MsgFlag.SENDER_PAYS_FEES,
@@ -99,8 +100,8 @@ contract DeParticipant is IDeParticipant, PlatformUtils, TransferUtils {
     }
 
     function removeStake(address deAuction, uint128 value) public view override onlyOwner withLock cashBack {
-        require(value > 0, 69);
-        require(_stakes[deAuction] >= value, 69);
+        require(value > 0, ErrorCodes.LOW_VALUE);
+        require(_stakes[deAuction] >= value, ErrorCodes.VALUE_MORE_THAN_STAKE);
         IDeAuction(deAuction).removeStake{
             value: Gas.DE_PARTICIPANT_ACTION_VALUE,
             flag: MsgFlag.SENDER_PAYS_FEES,
@@ -123,7 +124,7 @@ contract DeParticipant is IDeParticipant, PlatformUtils, TransferUtils {
     function confirmPrice(address deAuction, uint128 price, uint256 salt) public override onlyOwner withLock cashBack {
         optional(uint256) hash = _hashes[deAuction];
         uint256 expectedHash = calcPriceHash(price, salt);
-        require(hash.hasValue() && hash.get() == expectedHash, 69);
+        require(hash.hasValue() && hash.get() == expectedHash, ErrorCodes.WRONG_HASH);
         IDeAuction(deAuction).confirmPrice{
             value: Gas.DE_PARTICIPANT_ACTION_VALUE,
             flag: MsgFlag.SENDER_PAYS_FEES,
@@ -139,7 +140,7 @@ contract DeParticipant is IDeParticipant, PlatformUtils, TransferUtils {
     }
 
     function claim(address deAuction) public view override onlyOwner withLock cashBack {
-        require(_stakes[deAuction] > 0, 69);
+        require(_stakes[deAuction] > 0, ErrorCodes.NO_STAKE);
         IDeAuction(deAuction).claim{
             value: Gas.DE_PARTICIPANT_ACTION_VALUE,
             flag: MsgFlag.SENDER_PAYS_FEES,

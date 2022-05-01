@@ -25,7 +25,7 @@ contract DeAuctionECC is DeAuction {
         ExtraCurrencyCollection currencies;
         currencies[_neverID] = value;
         receiver.transfer({
-            value: Gas.TRANSFER_VALUE,
+            value: Gas.TRANSFER_ECC_VALUE,
             flag: MsgFlag.SENDER_PAYS_FEES,
             bounce: false,
             currencies: currencies

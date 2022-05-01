@@ -53,7 +53,7 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
 
     modifier onlyDeAuction(uint64 nonce) {
         address deAuction = _deAuctionAddress(nonce);
-        require(msg.sender == deAuction, 69);
+        require(msg.sender == deAuction, ErrorCodes.IS_NOT_DE_AUCTION);
         _;
     }
 
@@ -174,10 +174,11 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
     @value          You must send all value of your bid, can be calculated as [price * amount + fee - deposit]
     */
     function confirmBid(uint128 price, uint128 amount, uint256 salt) public view override inPhase(Phase.CONFIRM) {
-        require(price >= _quotingPrice, 69);
-        require(amount >= _minLotSize, 69);
+        require(price >= _quotingPrice, ErrorCodes.LOW_PRICE);
+        require(amount >= _minLotSize, ErrorCodes.LOW_AMOUNT);
         uint128 value = price * amount;
         require(msg.value + _deposit >= value + _fee, ErrorCodes.LOW_MSG_VALUE);
+
         uint256 hash = calcBidHash(price, amount, msg.sender, salt);
         address bid = _bidAddress(hash);
         BidData data = BidData(msg.sender, price, amount, value);
@@ -212,8 +213,8 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
     @return         256-bit hash
     */
     function calcBidHash(uint128 price, uint128 amount, address sender, uint256 salt) public view override returns (uint256 hash) {
-        require(price >= _quotingPrice, 69);
-        require(amount >= _minLotSize, 69);
+        require(price >= _quotingPrice, ErrorCodes.LOW_PRICE);
+        require(amount >= _minLotSize, ErrorCodes.LOW_AMOUNT);
         return _calcBidHash(price, amount, sender, salt);
     }
 
