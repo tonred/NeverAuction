@@ -16,8 +16,10 @@ import "./utils/ErrorCodes.sol";
 import "./utils/Gas.sol";
 import "./utils/TransferUtils.sol";
 
+import "@broxus/contracts/contracts/utils/RandomNonce.sol";
 
-contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils {
+
+contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils, RandomNonce {
     event NewAuction(address auction);
     event NewDeParticipant(address deParticipant);
     event NewDeAuction(address auction, address deAuction);
@@ -53,6 +55,7 @@ contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils 
 
 
     constructor(AuctionConfig auctionConfig, DeAuctionGlobalConfig deAuctionGlobalConfig) public onlyElector {
+        tvm.accept();
         _auctionConfig = auctionConfig;
         _deAuctionGlobalConfig = deAuctionGlobalConfig;
     }

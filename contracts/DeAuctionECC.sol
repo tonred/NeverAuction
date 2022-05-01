@@ -32,4 +32,8 @@ contract DeAuctionECC is DeAuction {
         });
     }
 
+    function buildInitDetails(uint32 neverID, address electorVault) public pure returns (TvmCell details) {
+        return abi.encode(neverID, electorVault);
+    }
+
 }

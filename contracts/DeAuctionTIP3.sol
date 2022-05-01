@@ -59,4 +59,8 @@ contract DeAuctionTIP3 is DeAuction, IAcceptTokensTransferCallback {
         );
     }
 
+    function buildInitDetails(address neverRoot, address neverWallet) public pure returns (TvmCell details) {
+        return abi.encode(neverRoot, neverWallet);
+    }
+
 }

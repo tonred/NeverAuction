@@ -107,6 +107,14 @@
 			]
 		},
 		{
+			"name": "_randomNonce",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_randomNonce","type":"uint256"}
+			]
+		},
+		{
 			"name": "_elector",
 			"inputs": [
 			],
@@ -180,7 +188,8 @@
 		}
 	],
 	"data": [
-		{"key":1,"name":"_elector","type":"address"}
+		{"key":1,"name":"_randomNonce","type":"uint256"},
+		{"key":2,"name":"_elector","type":"address"}
 	],
 	"events": [
 		{
@@ -221,6 +230,7 @@
 		{"name":"_timestamp","type":"uint64"},
 		{"name":"_constructorFlag","type":"bool"},
 		{"name":"_platformCode","type":"cell"},
+		{"name":"_randomNonce","type":"uint256"},
 		{"name":"_elector","type":"address"},
 		{"name":"_nonce","type":"uint64"},
 		{"components":[{"name":"fee","type":"uint128"},{"name":"deposit","type":"uint128"},{"name":"openDuration","type":"uint32"},{"name":"deBidDuration","type":"uint32"},{"name":"confirmDuration","type":"uint32"},{"name":"bidCode","type":"cell"}],"name":"_auctionConfig","type":"tuple"},
