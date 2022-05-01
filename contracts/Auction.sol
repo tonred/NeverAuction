@@ -23,8 +23,8 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
     event ConfirmBid(address owner, uint256 hash);
     event Finish(bool success, BidData winner);
 
-    address public static _root;
-    uint64 public static _nonce;
+    address public _root;  // todo getter
+    uint64 public _nonce;
 
     uint128 public _minLotSize;
     uint128 public _quotingPrice;

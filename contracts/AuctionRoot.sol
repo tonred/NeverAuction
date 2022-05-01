@@ -24,11 +24,11 @@ contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils,
     event NewDeParticipant(address deParticipant);
     event NewDeAuction(address auction, address deAuction);
 
-    address public static _elector;
-
-    uint64 public _nonce;
+    address public _elector;
     AuctionConfig public _auctionConfig;
     DeAuctionGlobalConfig public _deAuctionGlobalConfig;
+
+    uint64 public _nonce;
     bool public _isActionNow;
     address public _auction;
 
@@ -54,8 +54,9 @@ contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils,
     }
 
 
-    constructor(AuctionConfig auctionConfig, DeAuctionGlobalConfig deAuctionGlobalConfig) public onlyElector {
+    constructor(address elector, AuctionConfig auctionConfig, DeAuctionGlobalConfig deAuctionGlobalConfig) public {
         tvm.accept();
+        _elector = elector;
         _auctionConfig = auctionConfig;
         _deAuctionGlobalConfig = deAuctionGlobalConfig;
     }
@@ -75,15 +76,33 @@ contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils,
     // todo getCodes, getParameters
     // todo find and replace all ' : '
 
-    function changeAuctionConfig(AuctionConfig auctionConfig) public override onlyElector {
+    function setCodes(
+        TvmCell platformCode,
+        TvmCell auctionCode,
+        TvmCell deAuctionCode,
+        TvmCell deParticipantCode
+    ) public override onlyElector cashBack {
+        _platformCode = platformCode;
+        _auctionCode = auctionCode;
+        _deAuctionCode = deAuctionCode;
+        _deParticipantCode = deParticipantCode;
+    }
+
+    function changeElector(address elector) public override onlyElector cashBack {
+        _elector = elector;
+        // todo event
+    }
+
+    function changeAuctionConfig(AuctionConfig auctionConfig) public override onlyElector cashBack {
         _auctionConfig = auctionConfig;
     }
 
-    function changeDeAuctionGlobalConfig(DeAuctionGlobalConfig deAuctionGlobalConfig) public override onlyElector {
+    function changeDeAuctionGlobalConfig(DeAuctionGlobalConfig deAuctionGlobalConfig) public override onlyElector cashBack {
         _deAuctionGlobalConfig = deAuctionGlobalConfig;
     }
 
-    function createAuction(uint128 minLotSize, uint128 quotingPrice) public override cashBack {
+
+    function createAuction(uint128 minLotSize, uint128 quotingPrice) public override onlyElector cashBack {
         require(!_isActionNow, ErrorCodes.AUCTION_IS_ALREADY_RUNNING);
         TvmCell stateInit = _buildAuctionStateInit(_nonce++);
         TvmCell initialParams = abi.encode(_auctionConfig, minLotSize, quotingPrice);
@@ -133,12 +152,12 @@ contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils,
     }
 
     function onFinish(bool success, BidData winner) public override onlyAuction {
+        _isActionNow = false;
         IElector(_elector).onAuctionFinish{
-            value: MsgFlag.REMAINING_GAS,
-            flag: 0,
+            value: 0,
+            flag: MsgFlag.REMAINING_GAS,
             bounce: false
         }(success, winner.owner, winner.price, winner.amount);
-        _isActionNow = false;
     }
 
     function upgrade(TvmCell code) external override internalMsg {

@@ -225,8 +225,6 @@
 		}
 	],
 	"data": [
-		{"key":1,"name":"_root","type":"address"},
-		{"key":2,"name":"_nonce","type":"uint64"}
 	],
 	"events": [
 		{
