@@ -18,6 +18,7 @@ from contracts.auction import Auction
 from contracts.auction_root import AuctionRoot
 from contracts.de_auction import DeAuction
 from contracts.de_participant import DeParticipant
+from helpers.bidder import Bidder
 from utils.options import Options
 from utils.wallet import Wallet
 
@@ -84,6 +85,9 @@ class Deployer:
     @staticmethod
     def create_aggregator() -> Wallet:
         return Wallet(nickname='Aggregator', balance=int(1e6 * ts4.GRAM))
+
+    def create_bidder(self, price: int, amount: int) -> Bidder:
+        return Bidder(self.auction, price, amount)
 
     @staticmethod
     def create_wallet(**kwargs) -> Wallet:

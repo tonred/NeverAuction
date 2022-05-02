@@ -4,8 +4,11 @@ from enum import IntEnum
 from config import *
 from helpers.deployer import Deployer
 from utils.options import Options
-from utils.utils import random_salt
+from utils.utils import ZERO_ADDRESS
 from utils.wallet import Wallet
+
+DEFAULT_PRICE = 4 * ts4.GRAM
+DEFAULT_AMOUNT = 1234
 
 
 class Phase(IntEnum):
@@ -43,26 +46,29 @@ class TestAuction(unittest.TestCase):
         # have at least 1 bid in order to not skip phases
         wallet = Wallet()
         self.auction.make_bid(wallet, 0)
+
         ts4.core.set_now(DEFAULT_OPEN_DURATION)
         self._check_phase(Phase.DE_BID)
+
         ts4.core.set_now(DEFAULT_OPEN_DURATION + DEFAULT_DE_BID_DURATION)
         self._check_phase(Phase.CONFIRM)
+
         ts4.core.set_now(DEFAULT_OPEN_DURATION + DEFAULT_DE_BID_DURATION + DEFAULT_CONFIRM_DURATION)
         self._check_phase(Phase.FINISH)
 
     def test_make_bid(self):
-        wallet = Wallet()
-        balance_before = wallet.balance
-        self.auction.make_bid(wallet, 0)
-        self._check_balance(wallet, balance_before - DEFAULT_DEPOSIT)
+        bidder = self.deployer.create_bidder(DEFAULT_PRICE, DEFAULT_AMOUNT)
+        balance_before = bidder.wallet.balance
+        bidder.make_bid()
+        self._check_balance(bidder.wallet, balance_before - DEFAULT_DEPOSIT)
 
     def test_remove_bid(self):
-        wallet = Wallet()
-        balance_before = wallet.balance
-        self.auction.make_bid(wallet, 0)
-        self.auction.remove_bid(wallet, 0)
+        bidder = self.deployer.create_bidder(DEFAULT_PRICE, DEFAULT_AMOUNT)
+        balance_before = bidder.wallet.balance
+        bidder.make_bid()
+        bidder.remove_bid()
         remove_bid_value = int(0.3 * ts4.GRAM)
-        self._check_balance(wallet, balance_before - DEFAULT_FEE - remove_bid_value)
+        self._check_balance(bidder.wallet, balance_before - DEFAULT_FEE - remove_bid_value)
 
     def test_make_bid_wrong_phase(self):
         ts4.core.set_now(DEFAULT_OPEN_DURATION)
@@ -75,17 +81,98 @@ class TestAuction(unittest.TestCase):
         self.auction.make_de_bid(wallet, 0, 0, Options(DEFAULT_BID_VALUE, expect_ec=1004))
 
     def test_confirm_bid(self):
-        wallet = Wallet()
-        balance_before = wallet.balance
-        price = 4 * ts4.GRAM
-        amount = 123
-        salt = random_salt()
-        bid_hash = self.auction.calc_bid_hash(price, amount, wallet.address, salt)
-        self.auction.make_bid(wallet, bid_hash)
+        bidder = self.deployer.create_bidder(DEFAULT_PRICE, DEFAULT_AMOUNT)
+        balance_before = bidder.wallet.balance
+        bidder.make_bid()
         ts4.core.set_now(CONFIRM_TIME)
-        options = Options.from_grams(price * amount)
-        self.auction.confirm_bid(wallet, price, amount, salt, options)
-        self._check_balance(wallet, balance_before - DEFAULT_FEE - price * amount)
+        bidder.confirm_bid()
+        self._check_balance(bidder.wallet, balance_before - DEFAULT_FEE - bidder.value())
+
+    def test_confirm_bid_min_value(self):
+        bidder = self.deployer.create_bidder(DEFAULT_PRICE, DEFAULT_AMOUNT)
+        balance_before = bidder.wallet.balance
+        bidder.make_bid()
+        ts4.core.set_now(CONFIRM_TIME)
+        value = bidder.value() - DEFAULT_DEPOSIT + DEFAULT_FEE
+        bidder.confirm_bid(value)
+        self._check_balance(bidder.wallet, balance_before - DEFAULT_FEE - bidder.value())
+
+    def test_confirm_bid_low_value(self):
+        bidder = self.deployer.create_bidder(DEFAULT_PRICE, DEFAULT_AMOUNT)
+        bidder.make_bid()
+        ts4.core.set_now(CONFIRM_TIME)
+        value = bidder.value() - DEFAULT_DEPOSIT + DEFAULT_FEE - 1
+        options = Options.from_grams(value, expect_ec=3002)
+        self.auction.confirm_bid(bidder.wallet, bidder.price, bidder.amount, bidder.salt, options)
+
+    def test_no_winner(self):
+        bidder = self.deployer.create_bidder(DEFAULT_PRICE, DEFAULT_AMOUNT)
+        bidder.make_bid()
+        ts4.core.set_now(FINISH_TIME)
+        self.auction.finish(bidder.wallet)
+        winner = self.auction.call_responsible('getWinner')
+        self.assertEqual(winner['owner'], ZERO_ADDRESS, 'Wrong winner')
+
+    def test_no_bidder_no_winner(self):
+        ts4.core.set_now(CONFIRM_TIME)  # confirm time, but no bidder, so auction is finished
+        random_guy = Wallet()
+        self.auction.finish(random_guy)
+        winner = self.auction.call_responsible('getWinner')
+        self.assertEqual(winner['owner'], ZERO_ADDRESS, 'Wrong winner')
+
+    def test_one_bidder(self):
+        bidder = self.deployer.create_bidder(DEFAULT_PRICE, DEFAULT_AMOUNT)
+        init_balance = bidder.wallet.balance
+        bidder.make_bid()
+        ts4.core.set_now(CONFIRM_TIME)
+        bidder.confirm_bid()
+
+        random_guy = Wallet()
+        self.auction.finish(random_guy)
+        winner = self.auction.call_responsible('getWinner')
+        self.assertDictEqual(winner, bidder.bid_data(), 'Wrong winner')
+        self._check_balance(bidder.wallet, init_balance - DEFAULT_FEE - bidder.value() + ON_WIN_VALUE)
+
+    def test_many_bidder(self):
+        second_price = DEFAULT_PRICE + int(0.2 * ts4.GRAM)
+        second_amount = DEFAULT_AMOUNT + 300
+        third_price = DEFAULT_PRICE + int(0.3 * ts4.GRAM)
+        third_amount = DEFAULT_AMOUNT + 100
+        bidder_1 = self.deployer.create_bidder(DEFAULT_PRICE, DEFAULT_AMOUNT)  # return immediately in confirmation
+        bidder_2 = self.deployer.create_bidder(second_price, second_amount)  # return after confirmation of third bid
+        bidder_3 = self.deployer.create_bidder(third_price, third_amount)  # winner
+        init_balance = bidder_1.wallet.balance
+
+        bidder_1.make_bid()
+        bidder_2.make_bid()
+        bidder_3.make_bid()
+        ts4.core.set_now(CONFIRM_TIME)
+        bidder_1.confirm_bid()
+        bidder_2.confirm_bid()
+        bidder_3.confirm_bid()
+
+        random_guy = Wallet()
+        self.auction.finish(random_guy)
+        winner = self.auction.call_responsible('getWinner')
+        expected_winner = {
+            'owner': bidder_3.wallet.address,
+            'price': bidder_2.price,  # second price
+            'amount': bidder_3.amount,
+            'value': bidder_2.price * bidder_3.amount,
+        }
+        self.assertDictEqual(winner, expected_winner, 'Wrong winner')
+
+        self._check_balance(bidder_1.wallet, init_balance - DEFAULT_FEE)
+        self._check_balance(bidder_2.wallet, init_balance - DEFAULT_FEE)
+        self._check_balance(bidder_3.wallet, init_balance - DEFAULT_FEE - expected_winner['value'] + ON_WIN_VALUE)
+
+    def test_finish_wrong_phase(self):
+        bidder = self.deployer.create_bidder(DEFAULT_PRICE, DEFAULT_AMOUNT)
+        bidder.make_bid()
+        ts4.core.set_now(CONFIRM_TIME)  # wrong phase
+        self.auction.finish(bidder.wallet, Options(0.5, expect_ec=1006))
+        ts4.core.set_now(FINISH_TIME)  # right phase
+        self.auction.finish(bidder.wallet, Options(0.5))
 
     def _check_phase(self, expected: Phase):
         self.assertEqual(self.auction.call_responsible('getPhase'), expected.value, 'Wrong phase')

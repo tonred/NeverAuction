@@ -14,6 +14,17 @@ class Bidder:
         self.salt = random_salt()
         self.hash = auction.calc_bid_hash(price, amount, self.wallet.address, self.salt)
 
+    def value(self) -> int:
+        return self.price * self.amount
+
+    def bid_data(self) -> dict:
+        return {
+            'owner': self.wallet.address,
+            'price': self.price,
+            'amount': self.amount,
+            'value': self.value(),
+        }
+
     def make_bid(self):
         self.auction.make_bid(self.wallet, self.hash)
 
@@ -22,6 +33,6 @@ class Bidder:
 
     def confirm_bid(self, value: int = None):
         if value is None:
-            value = self.price * self.amount
+            value = self.value()
         options = Options.from_grams(value)
         self.auction.confirm_bid(self.wallet, self.price, self.amount, self.salt, options)

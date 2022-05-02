@@ -229,6 +229,7 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
             });
             _winner = _first;
             _winner.price = _second.price;
+            _winner.value = _second.price * _first.amount;
         }
 
         if (success) {

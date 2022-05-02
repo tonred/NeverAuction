@@ -12,7 +12,7 @@ abstract contract TransferUtils {
     }
 
     function _reserve() internal view {
-        tvm.rawReserve(address(this).balance - msg.value, 2);  // todo
+        tvm.rawReserve(address(this).balance - msg.value, 0);  // todo
     }
 
 }
