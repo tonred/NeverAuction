@@ -18,7 +18,7 @@ def _camelcase_dict(data: dict) -> dict:
     }
 
 
-def _process_function_args(function: Callable, args: tuple, kwargs: dict) -> (dict, Options):
+def _process_function_args(function: Callable, args: tuple, kwargs: dict, ignore: tuple = tuple()) -> (dict, Options):
     result = dict()
     # default values
     parameters = inspect.signature(function).parameters
@@ -28,11 +28,14 @@ def _process_function_args(function: Callable, args: tuple, kwargs: dict) -> (di
     # kwargs values
     result.update(kwargs)
     # args values
-    args_names = function.__code__.co_varnames[1:]
+    args_names = function.__code__.co_varnames[1:]  # skip self
     for name, arg in zip(args_names, args):
         result[name] = arg
     # pop options
     options = result.pop('options', None)
+    # pop ignores
+    for key in ignore:
+        result.pop(key)
     # key names to camelcase
     result = _camelcase_dict(result)
     # fix big ints (ts4 bug)
@@ -53,10 +56,8 @@ def solidity_function(send_as: str = 'owner', ignore: tuple = ()):
     def decorator(function: Callable):
         def wrapper(self: ts4.BaseContract, *args, options: Options = None, **kwargs):
             method = stringcase.camelcase(function.__name__)
-            params, options = _process_function_args(function, args, kwargs)
+            params, options = _process_function_args(function, args, kwargs, ignore)
             sender = _find_sender(send_as, self, params)
-            for key in ignore:
-                params.pop(key)
             print(method, params, options)
             sender.run_target(self, options=options, method=method, params=params)
             return function(self, *args, **kwargs)

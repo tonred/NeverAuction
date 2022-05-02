@@ -11,6 +11,7 @@ from config import (
     DEFAULT_MSG_VALUE,
 )
 from contracts.de_auction import DeAuction
+from helpers.token_type import DeAuctionTokenType
 from utils.base_contract import BaseContract
 from utils.options import Options
 from utils.solidity_function import solidity_function, solidity_getter
@@ -27,9 +28,10 @@ class DeParticipant(BaseContract):
         self.root = root
         self.owner = owner
 
-    @solidity_function()
+    @solidity_function(ignore=('token_type',))
     def create_de_auction(
             self,
+            token_type: DeAuctionTokenType,
             description: str = DEFAULT_DESCRIPTION,
             prices: dict = DEFAULT_PRICES,  # noqa (is not changed)
             deviation: int = DEFAULT_DEVIATION,
@@ -37,9 +39,9 @@ class DeParticipant(BaseContract):
             value: int = DEFAULT_VALUE,
             options=Options.from_grams(DEFAULT_MSG_VALUE),
     ) -> DeAuction:
-        nonce = self.call_getter('_nonce') - 1
+        nonce = self.root.call_getter('_nonce') - 1
         de_auction_address = self.root.expected_de_auction(nonce)
-        return DeAuction(de_auction_address, self.root, self.owner)
+        return DeAuction(de_auction_address, token_type.name, self.root, self.owner)
 
     @solidity_function()
     def stake(self, de_auction: ts4.Address, value: int, price_hash: int, options=Options(1)):

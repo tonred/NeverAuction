@@ -14,8 +14,8 @@ if typing.TYPE_CHECKING:
 
 class DeAuction(BaseContract):
 
-    def __init__(self, address: ts4.Address, root: 'AuctionRoot', aggregator: Wallet):
-        super().__init__(address)
+    def __init__(self, address: ts4.Address, abi_suffix: str, root: 'AuctionRoot', aggregator: Wallet):
+        super().__init__(address, abi_suffix)
         self.root = root
         self.aggregator = aggregator
 
