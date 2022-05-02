@@ -1,0 +1,4 @@
+tonos-ts4==0.4.1
+ton-client-py==1.32.0.1
+stringcase==1.2.0
+decohints==1.0.4
