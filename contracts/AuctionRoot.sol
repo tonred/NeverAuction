@@ -20,9 +20,14 @@ import "@broxus/contracts/contracts/utils/RandomNonce.sol";
 
 
 contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils, RandomNonce {
+    event ElectorChange(address from, address to);
+    event AuctionConfigChange(AuctionConfig from, AuctionConfig to);
+    event DeAuctionGlobalConfigChange(DeAuctionGlobalConfig from, DeAuctionGlobalConfig to);
+
     event NewAuction(address auction);
     event NewDeParticipant(address deParticipant);
     event NewDeAuction(address auction, address deAuction);
+    event Finish(bool success, BidData winner);
 
     address public _elector;
     AuctionConfig public _auctionConfig;
@@ -74,6 +79,14 @@ contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils,
         return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} _deAuctionAddress(nonce);
     }
 
+    function getDetails() public view responsible override returns (address elector, AuctionConfig auctionConfig, DeAuctionGlobalConfig deAuctionGlobalConfig) {
+        return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} (_elector, _auctionConfig, _deAuctionGlobalConfig);
+    }
+
+    function getCodes() public view responsible override returns (TvmCell auctionCode, TvmCell deAuctionCode, TvmCell deParticipantCode) {
+        return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} (_auctionCode, _deAuctionCode, _deParticipantCode);
+    }
+
     function currentAuction() public view responsible override returns (optional(address) auction) {
         if (_isActionNow) {
             auction.set(_auction);
@@ -81,8 +94,6 @@ contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils,
         return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} auction;
     }
 
-    // todo getCodes, getParameters
-    // todo find and replace all ' : '
 
     function setCodes(
         TvmCell platformCode,
@@ -97,15 +108,17 @@ contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils,
     }
 
     function changeElector(address elector) public override onlyElector cashBack {
+        emit ElectorChange(_elector, elector);
         _elector = elector;
-        // todo event
     }
 
     function changeAuctionConfig(AuctionConfig auctionConfig) public override onlyElector cashBack {
+        emit AuctionConfigChange(_auctionConfig, auctionConfig);
         _auctionConfig = auctionConfig;
     }
 
     function changeDeAuctionGlobalConfig(DeAuctionGlobalConfig deAuctionGlobalConfig) public override onlyElector cashBack {
+        emit DeAuctionGlobalConfigChange(_deAuctionGlobalConfig, deAuctionGlobalConfig);
         _deAuctionGlobalConfig = deAuctionGlobalConfig;
     }
 
@@ -163,6 +176,7 @@ contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils,
 
     function onFinish(bool success, BidData winner) public override onlyAuction {
         _isActionNow = false;
+        emit Finish(success, winner);
         IElector(_elector).onAuctionFinish{
             value: 0,
             flag: MsgFlag.REMAINING_GAS,

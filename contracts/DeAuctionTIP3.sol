@@ -31,6 +31,10 @@ contract DeAuctionTIP3 is DeAuction, IAcceptTokensTransferCallback {
         _neverWallet = wallet;
     }
 
+    function getNeverDetails() public view responsible returns (address neverRoot, address neverWallet) {
+        return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} (_neverRoot, _neverWallet);
+    }
+
     function onAcceptTokensTransfer(
         address /*tokenRoot*/,
         uint128 amount,

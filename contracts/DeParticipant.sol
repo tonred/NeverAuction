@@ -15,6 +15,11 @@ import "./utils/TransferUtils.sol";
 
 
 contract DeParticipant is IDeParticipant, PlatformUtils, TransferUtils {
+    event NewDeAuction(address deAuction, uint128 value);
+    event Stake(address deAuction, uint128 value, optional(uint256) priceHash);
+    event RemoveStake(address deAuction, uint128 value);
+    event ConfirmPrice(address deAuction);
+    event Claim(address deAuction);
 
     address public _root;
     address public _owner;
@@ -22,7 +27,6 @@ contract DeParticipant is IDeParticipant, PlatformUtils, TransferUtils {
     bool public _lock;
     mapping(address => uint128) public _stakes;
     mapping(address => optional(uint256)) public _hashes;
-
 
 
     modifier onlyOwner() {
@@ -59,6 +63,17 @@ contract DeParticipant is IDeParticipant, PlatformUtils, TransferUtils {
         /*TvmCell initialParams = */slice.loadRef();
     }
 
+
+    function getDetails() public view responsible override returns (address root, address owner) {
+        return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} (_root, _owner);
+    }
+
+    function getDeAuctionData(address deAuction) public view responsible override returns (bool exists, uint128 stake, optional(uint256) hash) {
+        exists = _stakes.exists(deAuction);
+        return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} (exists, _stakes[deAuction], _hashes[deAuction]);
+    }
+
+
     function createDeAuction(
         string description,
         PriceRange prices,
@@ -77,6 +92,7 @@ contract DeParticipant is IDeParticipant, PlatformUtils, TransferUtils {
 
     function onDeAuctionInit(uint64 nonce, uint128 value) public override onlyDeAuction(nonce) {
         _stakes[msg.sender] += value;
+        emit NewDeAuction(msg.sender, value);
         IDeOwner(_owner).onDeAuctionInit{value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false}(msg.sender, value);
     }
 
@@ -91,6 +107,7 @@ contract DeParticipant is IDeParticipant, PlatformUtils, TransferUtils {
 
     function onStake(uint64 nonce, uint128 value, optional(uint256) priceHash, bool success) public override onlyDeAuction(nonce) unlock {
         if (success) {
+            emit Stake(msg.sender, value, priceHash);
             _stakes[msg.sender] += value;
             if (priceHash.hasValue()) {
                 _hashes[msg.sender] = priceHash.get();
@@ -112,6 +129,7 @@ contract DeParticipant is IDeParticipant, PlatformUtils, TransferUtils {
     function onRemoveStake(uint64 nonce, uint128 value, bool success) public override onlyDeAuction(nonce) unlock {
         bool fully = false;
         if (success) {
+            emit RemoveStake(msg.sender, value);
             _stakes[msg.sender] -= value;
             if (_stakes[msg.sender] == 0) {
                 _cleanDeAuctionData(msg.sender);
@@ -134,6 +152,7 @@ contract DeParticipant is IDeParticipant, PlatformUtils, TransferUtils {
 
     function onConfirmPrice(uint64 nonce, bool success) public override onlyDeAuction(nonce) unlock {
         if (success) {
+            emit ConfirmPrice(msg.sender);
             delete _hashes[msg.sender];
         }
         IDeOwner(_owner).onConfirmPrice{value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false}(success);
@@ -150,6 +169,7 @@ contract DeParticipant is IDeParticipant, PlatformUtils, TransferUtils {
 
     function onClaim(uint64 nonce, bool success) public override onlyDeAuction(nonce) unlock {
         if (success) {
+            emit Claim(msg.sender);
             _cleanDeAuctionData(msg.sender);
         }
         IDeOwner(_owner).onClaim{value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false}(success);

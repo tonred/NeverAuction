@@ -9,6 +9,9 @@ interface IAuctionRoot {
     function expectedAuction(uint64 nonce) external view responsible returns (address auction);
     function expectedDeParticipant(address owner) external view responsible returns (address deParticipant);
     function expectedDeAuction(uint64 nonce) external view responsible returns (address deAuction);
+
+    function getDetails() external view responsible returns (address elector, AuctionConfig auctionConfig, DeAuctionGlobalConfig deAuctionGlobalConfig);
+    function getCodes() external view responsible returns (TvmCell auctionCode, TvmCell deAuctionCode, TvmCell deParticipantCode);
     function currentAuction() external view responsible returns (optional(address) auction);
 
     function setCodes(TvmCell platformCode, TvmCell auctionCode, TvmCell deAuctionCode, TvmCell deParticipantCode) external;

@@ -9,8 +9,6 @@ import "./interfaces/internal/IAuction.sol";
 import "./interfaces/internal/IDeAuction.sol";
 import "./interfaces/internal/IDeParticipant.sol";
 import "./platform/PlatformUtils.sol";
-import "./structures/DeAuctionConfig.sol";
-import "./structures/DePhase.sol";
 import "./utils/Constants.sol";
 import "./utils/ErrorCodes.sol";
 import "./utils/Gas.sol";
@@ -24,12 +22,19 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
     event Stake(address owner, uint128 value);
     event RemoveStake(address owner, uint128 value);
     event ConfirmPrice(address owner, uint128 price);
+    event FinishSubVoting();
+    event MakeBid();
+    event ConfirmBid();
+    event Win(uint128 price, uint128 amount);
+    event Lose();
+    event Distribution();
+    event Slashed();
     event Claim(address owner, uint128 everValue, uint128 neverValue);
 
     address public _root;
     uint64 public _nonce;
-
     address public _auction;
+
     string public _description;
     PriceRange public _prices;
     uint128 public _deviation;
@@ -42,7 +47,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
     uint32 public _makeBidTime;
 
     DePhase public _phase;
-    AuctionDetails public _details;
+    AuctionDetails public _auctionDetails;
     uint128 public _totalStake;
 
     uint128 _avgPrice;
@@ -115,7 +120,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
     function _init(TvmCell details) internal virtual;
 
     function onGetDetails(AuctionDetails details) public override onlyAuction inPhase(DePhase.INITIALIZING) {
-        _details = details;
+        _auctionDetails = details;
         bool isOpenEnough = now + _globalConfig.subOpenDuration <= details.deBidTime;
         bool isDeBidEnough = _globalConfig.subConfirmDuration + _globalConfig.makeBidDuration <= details.confirmTime - details.deBidTime;
         _subConfirmTime = details.deBidTime;
@@ -127,6 +132,30 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
             _phase = DePhase.SUB_OPEN;
         }
     }
+
+
+    function getDetails() public view responsible override returns (address root, address auction, DeAuctionConfig details) {
+        DeAuctionInitConfig initDetails = DeAuctionInitConfig(_description, _prices, _deviation, _aggregatorFee, _aggregator, _aggregatorStake);
+        details = DeAuctionConfig(initDetails, _globalConfig);
+        return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} (_root, _auction, details);
+    }
+
+    function getStakes() public view responsible override returns (uint128 total, uint128 aggregator) {
+        return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} (_totalStake, _aggregatorStake);
+    }
+
+    function getTimes() public view responsible override returns (uint32 subConfirmTime, uint32 makeBidTime) {
+        return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} (_subConfirmTime, _makeBidTime);
+    }
+
+    function getPhase() public view responsible override returns (DePhase phase) {
+        return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} _phase;
+    }
+
+    function getDistribution() public view responsible override returns (uint128 everValue, uint128 neverValue, uint128 aggregatorReward) {
+        return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} (_everValue, _neverValue, _aggregatorReward);
+    }
+
 
     function stake(address owner, uint128 value, optional(uint256) priceHash) public override onlyDeParticipant(owner) doUpdate {
         bool success = false;
@@ -178,7 +207,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
     }
 
     function finishSubVoting() public override inPhase(DePhase.SUB_FINISH) cashBack {
-        uint128 minStake = _details.minLotSize * _prices.max;
+        uint128 minStake = _auctionDetails.minLotSize * _prices.max;
         if (_totalStake < minStake) {
             // not enough stake to bid for all price range
             _phase = DePhase.LOSE;
@@ -188,6 +217,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
                 _avgPrice = uint128((uint256(_prices.min) + _prices.max) / 2);
             }
         }
+        emit FinishSubVoting();
     }
 
     function allowedPrice() public view override returns (PriceRange allowed) {
@@ -213,7 +243,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
 
     function makeBid(uint256 hash) public view override onlyAggregator inPhase(DePhase.WAITING_BID) cashBack {
         IAuction(_auction).makeBid{
-            value: _details.deposit + Gas.DE_AUCTION_ACTION_VALUE,
+            value: _auctionDetails.deposit + Gas.DE_AUCTION_ACTION_VALUE,
             flag: MsgFlag.SENDER_PAYS_FEES,
             bounce: true
         }(hash);
@@ -221,6 +251,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
 
     function onMakeBid() public override onlyAuction {
         _phase = DePhase.BID_MADE;
+        emit MakeBid();
         IAggregator(_aggregator).onMakeBid{value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false}();
     }
 
@@ -243,12 +274,14 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
 
     function onConfirmBid() public override onlyAuction {
         _phase = DePhase.BID_CONFIRMED;
+        emit ConfirmBid();
         IAggregator(_aggregator).onConfirmBid{value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false}();
     }
 
     function onWin(uint128 price, uint128 amount) public override onlyAuction {
         _phase = DePhase.WIN;
         _everValue = _totalStake - price * amount;
+        emit Win(price, amount);
         IAggregator(_aggregator).onWin{value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false}(price, amount);
     }
 
@@ -282,6 +315,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
 
     function onGetWinner(BidData winner) public override onlyAuction inPhase(DePhase.BID_CONFIRMED) {
         if (winner.owner != address(this)) {
+            emit Lose();
             _phase = DePhase.LOSE;
         }
         // onWin case is called automatically by Auction
@@ -291,14 +325,15 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
         _phase = DePhase.DISTRIBUTION;
         _aggregatorReward = math.muldiv(value, _aggregatorFee, Constants.PERCENT_DENOMINATOR);
         _neverValue = value - _aggregatorReward;
+        emit Distribution();
     }
 
     function checkAggregator() public view override returns (bool isFair) {
-        if (now > _details.confirmTime && _phase < DePhase.BID_MADE) {
+        if (now > _auctionDetails.confirmTime && _phase < DePhase.BID_MADE) {
             // aggregator forgot to make bid
             return false;
         }
-        if (now > _details.finishTime && _phase < DePhase.BID_CONFIRMED) {
+        if (now > _auctionDetails.finishTime && _phase < DePhase.BID_CONFIRMED) {
             // aggregator forgot to confirm bid
             return false;
         }
@@ -315,6 +350,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
     function _slash() private {
         _phase = DePhase.SLASHED;
         _totalStake -= _aggregatorStake;
+        emit Slashed();
     }
 
     function claim(address owner, uint128 value) public override onlyDeParticipant(owner) {

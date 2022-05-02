@@ -4,6 +4,28 @@
 	"header": ["pubkey", "time", "expire"],
 	"functions": [
 		{
+			"name": "getDetails",
+			"inputs": [
+				{"name":"answerId","type":"uint32"}
+			],
+			"outputs": [
+				{"name":"root","type":"address"},
+				{"name":"owner","type":"address"}
+			]
+		},
+		{
+			"name": "getDeAuctionData",
+			"inputs": [
+				{"name":"answerId","type":"uint32"},
+				{"name":"deAuction","type":"address"}
+			],
+			"outputs": [
+				{"name":"exists","type":"bool"},
+				{"name":"stake","type":"uint128"},
+				{"name":"hash","type":"optional(uint256)"}
+			]
+		},
+		{
 			"name": "createDeAuction",
 			"inputs": [
 				{"name":"description","type":"string"},
@@ -178,6 +200,50 @@
 	"data": [
 	],
 	"events": [
+		{
+			"name": "NewDeAuction",
+			"inputs": [
+				{"name":"deAuction","type":"address"},
+				{"name":"value","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "Stake",
+			"inputs": [
+				{"name":"deAuction","type":"address"},
+				{"name":"value","type":"uint128"},
+				{"name":"priceHash","type":"optional(uint256)"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "RemoveStake",
+			"inputs": [
+				{"name":"deAuction","type":"address"},
+				{"name":"value","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "ConfirmPrice",
+			"inputs": [
+				{"name":"deAuction","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "Claim",
+			"inputs": [
+				{"name":"deAuction","type":"address"}
+			],
+			"outputs": [
+			]
+		}
 	],
 	"fields": [
 		{"name":"_pubkey","type":"uint256"},

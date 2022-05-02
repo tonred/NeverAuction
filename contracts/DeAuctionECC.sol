@@ -16,6 +16,10 @@ contract DeAuctionECC is DeAuction {
         (_neverID, _electorVault) = abi.decode(details, (uint32, address));
     }
 
+    function getNeverDetails() public view responsible returns (uint32 neverID, address electorVault) {
+        return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} (_neverID, _electorVault);
+    }
+
     function onAcceptTokensTransfer(uint128 amount) public {
         require(msg.sender == _electorVault && _electorVault.value != 0, ErrorCodes.IS_NOT_ELECTOR);
         _onNeverTransfer(amount);

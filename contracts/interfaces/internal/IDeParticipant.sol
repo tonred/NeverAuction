@@ -4,6 +4,9 @@ import "../../structures/PriceRange.sol";
 
 
 interface IDeParticipant {
+    function getDetails() external view responsible returns (address root, address owner);
+    function getDeAuctionData(address deAuction) external view responsible returns (bool exists, uint128 stake, optional(uint256) hash);
+
     function createDeAuction(
         string description,
         PriceRange prices,
