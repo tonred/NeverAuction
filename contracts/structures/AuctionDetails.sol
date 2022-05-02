@@ -2,6 +2,7 @@ pragma ton-solidity >= 0.57.3;
 
 
 struct AuctionDetails {
+    address root;
     uint128 fee;
     uint128 deposit;
     uint32 deBidTime;

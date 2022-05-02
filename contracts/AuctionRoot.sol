@@ -62,8 +62,16 @@ contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils,
     }
 
 
+    function expectedAuction(uint64 nonce) public view responsible override returns (address auction) {
+        return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} _auctionAddress(nonce);
+    }
+
     function expectedDeParticipant(address owner) public view responsible override returns (address deParticipant) {
         return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} _deParticipantAddress(owner);
+    }
+
+    function expectedDeAuction(uint64 nonce) public view responsible override returns (address deAuction) {
+        return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} _deAuctionAddress(nonce);
     }
 
     function currentAuction() public view responsible override returns (optional(address) auction) {

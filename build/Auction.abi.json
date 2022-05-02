@@ -9,7 +9,7 @@
 				{"name":"answerId","type":"uint32"}
 			],
 			"outputs": [
-				{"components":[{"name":"fee","type":"uint128"},{"name":"deposit","type":"uint128"},{"name":"deBidTime","type":"uint32"},{"name":"confirmTime","type":"uint32"},{"name":"finishTime","type":"uint32"},{"name":"minLotSize","type":"uint128"},{"name":"quotingPrice","type":"uint128"}],"name":"details","type":"tuple"}
+				{"components":[{"name":"root","type":"address"},{"name":"fee","type":"uint128"},{"name":"deposit","type":"uint128"},{"name":"deBidTime","type":"uint32"},{"name":"confirmTime","type":"uint32"},{"name":"finishTime","type":"uint32"},{"name":"minLotSize","type":"uint128"},{"name":"quotingPrice","type":"uint128"}],"name":"details","type":"tuple"}
 			]
 		},
 		{

@@ -24,7 +24,7 @@
 		{
 			"name": "onGetDetails",
 			"inputs": [
-				{"components":[{"name":"fee","type":"uint128"},{"name":"deposit","type":"uint128"},{"name":"deBidTime","type":"uint32"},{"name":"confirmTime","type":"uint32"},{"name":"finishTime","type":"uint32"},{"name":"minLotSize","type":"uint128"},{"name":"quotingPrice","type":"uint128"}],"name":"details","type":"tuple"}
+				{"components":[{"name":"root","type":"address"},{"name":"fee","type":"uint128"},{"name":"deposit","type":"uint128"},{"name":"deBidTime","type":"uint32"},{"name":"confirmTime","type":"uint32"},{"name":"finishTime","type":"uint32"},{"name":"minLotSize","type":"uint128"},{"name":"quotingPrice","type":"uint128"}],"name":"details","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -310,7 +310,7 @@
 			"inputs": [
 			],
 			"outputs": [
-				{"components":[{"name":"fee","type":"uint128"},{"name":"deposit","type":"uint128"},{"name":"deBidTime","type":"uint32"},{"name":"confirmTime","type":"uint32"},{"name":"finishTime","type":"uint32"},{"name":"minLotSize","type":"uint128"},{"name":"quotingPrice","type":"uint128"}],"name":"_details","type":"tuple"}
+				{"components":[{"name":"root","type":"address"},{"name":"fee","type":"uint128"},{"name":"deposit","type":"uint128"},{"name":"deBidTime","type":"uint32"},{"name":"confirmTime","type":"uint32"},{"name":"finishTime","type":"uint32"},{"name":"minLotSize","type":"uint128"},{"name":"quotingPrice","type":"uint128"}],"name":"_details","type":"tuple"}
 			]
 		},
 		{
@@ -421,7 +421,7 @@
 		{"name":"_subConfirmTime","type":"uint32"},
 		{"name":"_makeBidTime","type":"uint32"},
 		{"name":"_phase","type":"uint8"},
-		{"components":[{"name":"fee","type":"uint128"},{"name":"deposit","type":"uint128"},{"name":"deBidTime","type":"uint32"},{"name":"confirmTime","type":"uint32"},{"name":"finishTime","type":"uint32"},{"name":"minLotSize","type":"uint128"},{"name":"quotingPrice","type":"uint128"}],"name":"_details","type":"tuple"},
+		{"components":[{"name":"root","type":"address"},{"name":"fee","type":"uint128"},{"name":"deposit","type":"uint128"},{"name":"deBidTime","type":"uint32"},{"name":"confirmTime","type":"uint32"},{"name":"finishTime","type":"uint32"},{"name":"minLotSize","type":"uint128"},{"name":"quotingPrice","type":"uint128"}],"name":"_details","type":"tuple"},
 		{"name":"_totalStake","type":"uint128"},
 		{"name":"_avgPrice","type":"uint128"},
 		{"name":"_avgStake","type":"uint128"},

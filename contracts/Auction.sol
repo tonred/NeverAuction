@@ -23,7 +23,7 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
     event ConfirmBid(address owner, uint256 hash);
     event Finish(bool success, BidData winner);
 
-    address public _root;  // todo getter
+    address public _root;
     uint64 public _nonce;
 
     uint128 public _minLotSize;
@@ -101,7 +101,7 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
 
 
     function getDetails() public view responsible override returns (AuctionDetails details) {
-        details = AuctionDetails(_fee, _deposit, _deBidTime, _confirmTime, _finishTime, _minLotSize, _quotingPrice);
+        details = AuctionDetails(_root, _fee, _deposit, _deBidTime, _confirmTime, _finishTime, _minLotSize, _quotingPrice);
         return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} details;
     }
 
@@ -123,24 +123,13 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
         _makeBid(hash);
     }
 
+    /*
+    Make bid only for DeAuction
+    @param hash     Bid hash (can be calculated via `calcBidHash` method locally)
+    @value          Must be greater than or equal to the deposit
+    */
     function makeDeBid(uint64 nonce, uint256 hash) public override onlyDeAuction(nonce) inPhase(Phase.DE_BID) {
         _makeBid(hash);
-    }
-
-    function _makeBid(uint256 hash) private {
-        require(msg.value >= _deposit, ErrorCodes.LOW_MSG_VALUE);
-        TvmCell stateInit = _buildBidStateInit(hash);
-        new Bid{
-            stateInit: stateInit,
-            value: Gas.DEPLOY_BID_VALUE
-        }(msg.sender);
-        emit MakeBid(msg.sender, hash);
-        _bidsCount++;
-        IParticipant(msg.sender).onMakeBid{
-            value: msg.value - _deposit,
-            flag: MsgFlag.SENDER_PAYS_FEES,
-            bounce: false
-        }();
     }
 
     /*
@@ -206,7 +195,7 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
     /*
     Calculates hash of bid
     Can be used off-chain before `makeBid` and `removeBid` functions
-    @param price    Bid price (greater than or equal to quoting price)
+    @param price    Price for 1 piece (greater than or equal to quoting price)
     @param amount   Amount to buy (greater than or equal to min lot size)
     @param sender   Address of sender
     @param salt     Random 256-bit value (please use really random number)
@@ -218,6 +207,9 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
         return _calcBidHash(price, amount, sender, salt);
     }
 
+    /*
+    Finish auction, can be called by everyone in proper phase
+    */
     function finish() public override inPhase(Phase.FINISH) {
         tvm.accept();
         bool success = true;
@@ -271,6 +263,22 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
         } else {
             return Phase.OPEN;
         }
+    }
+
+    function _makeBid(uint256 hash) private {
+        require(msg.value >= _deposit, ErrorCodes.LOW_MSG_VALUE);
+        TvmCell stateInit = _buildBidStateInit(hash);
+        new Bid{
+            stateInit: stateInit,
+            value: Gas.DEPLOY_BID_VALUE
+        }(msg.sender);
+        emit MakeBid(msg.sender, hash);
+        _bidsCount++;
+        IParticipant(msg.sender).onMakeBid{
+            value: msg.value - _deposit,
+            flag: MsgFlag.SENDER_PAYS_FEES,
+            bounce: false
+        }();
     }
 
     function _updateResults(BidData data) private {

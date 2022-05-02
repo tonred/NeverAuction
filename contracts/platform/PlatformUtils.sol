@@ -13,6 +13,11 @@ abstract contract PlatformUtils {
 
     TvmCell public _platformCode;
 
+    function _auctionAddress(uint64 nonce) internal view returns (address) {
+        TvmCell stateInit = _buildAuctionStateInit(nonce);
+        return calcAddress(stateInit);
+    }
+
     function _deAuctionAddress(uint64 nonce) internal view returns (address) {
         TvmCell stateInit = _buildDeAuctionStateInit(nonce);
         return calcAddress(stateInit);

@@ -14,6 +14,16 @@
 			]
 		},
 		{
+			"name": "expectedAuction",
+			"inputs": [
+				{"name":"answerId","type":"uint32"},
+				{"name":"nonce","type":"uint64"}
+			],
+			"outputs": [
+				{"name":"auction","type":"address"}
+			]
+		},
+		{
 			"name": "expectedDeParticipant",
 			"inputs": [
 				{"name":"answerId","type":"uint32"},
@@ -21,6 +31,16 @@
 			],
 			"outputs": [
 				{"name":"deParticipant","type":"address"}
+			]
+		},
+		{
+			"name": "expectedDeAuction",
+			"inputs": [
+				{"name":"answerId","type":"uint32"},
+				{"name":"nonce","type":"uint64"}
+			],
+			"outputs": [
+				{"name":"deAuction","type":"address"}
 			]
 		},
 		{
