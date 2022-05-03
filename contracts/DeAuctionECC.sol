@@ -9,8 +9,8 @@ import "DeAuction.sol";
 
 contract DeAuctionECC is DeAuction {
 
-    uint32 public _neverID;
-    address public _electorVault;
+    uint32 public _neverID;         // from details
+    address public _electorVault;   // from details
 
     function _init(TvmCell details) internal override {
         (_neverID, _electorVault) = abi.decode(details, (uint32, address));

@@ -19,6 +19,9 @@ class DeAuction(BaseContract):
         self.root = root
         self.aggregator = aggregator
 
+    def auction(self) -> ts4.Address:
+        return self.root.current_auction()
+
     @solidity_function(send_as='wallet')
     def finish_sub_voting(self, wallet: Wallet, options=Options(0.3)):
         pass

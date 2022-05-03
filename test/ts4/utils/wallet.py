@@ -5,6 +5,7 @@ from tonclient.types import Abi, Signer, CallSet, ParamsOfEncodeMessageBody
 from tonos_ts4 import ts4
 
 from config import EMPTY_CELL
+from utils.fix_params_for_sdk import fix_params_for_sdk
 from utils.options import Options
 from utils.utils import random_address
 
@@ -28,6 +29,7 @@ class Wallet(ts4.BaseContract):
             method: str,
             params: dict = None,
     ):
+        fix_params_for_sdk(params)
         call_set = CallSet(method, input=params)
         self.send_call_set(contract.address, options, call_set, contract.abi.json)
 

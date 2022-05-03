@@ -5,7 +5,6 @@ from tonclient.types import ParamsOfAbiEncodeBoc, AbiParam
 
 TIP3_ABI_PARAMS = [
     AbiParam('neverRoot', type='address'),
-    AbiParam('neverWallet', type='address'),
 ]
 ECC_ABI_PARAMS = [
     AbiParam('neverID', type='uint32'),
@@ -24,11 +23,7 @@ def encode_boc(abi_params: List[AbiParam], data: dict):
 
 def build_for_tip3():
     never_root = input('Never root address: ')
-    never_wallet = input('Never wallet address: ')
-    encode_boc(TIP3_ABI_PARAMS, data={
-        'neverRoot': never_root,
-        'neverWallet': never_wallet,
-    })
+    encode_boc(TIP3_ABI_PARAMS, data={'neverRoot': never_root})
 
 
 def build_for_ecc():

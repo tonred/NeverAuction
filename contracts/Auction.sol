@@ -141,6 +141,8 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
         address bid = _bidAddress(hash);
         Bid(bid).remove{
             value: Gas.REMOVE_BID_VALUE,
+            flag: MsgFlag.SENDER_PAYS_FEES,
+            bounce: false,
             callback: onRemoveBid
         }();
         emit RemoveBid(msg.sender, hash);
@@ -174,6 +176,7 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
         Bid(bid).confirm{
             value: Gas.CONFIRM_BID_VALUE,
             flag: MsgFlag.SENDER_PAYS_FEES,
+            bounce: true,
             callback: onConfirmBid
         }(data, msg.value);
         emit ConfirmBid(msg.sender, hash);
@@ -271,7 +274,9 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
         TvmCell stateInit = _buildBidStateInit(hash);
         new Bid{
             stateInit: stateInit,
-            value: Gas.DEPLOY_BID_VALUE
+            value: Gas.DEPLOY_BID_VALUE,
+            flag: MsgFlag.SENDER_PAYS_FEES,
+            bounce: false
         }(msg.sender);
         emit MakeBid(msg.sender, hash);
         _bidsCount++;

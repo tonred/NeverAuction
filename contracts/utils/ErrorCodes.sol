@@ -25,8 +25,9 @@ library ErrorCodes {
     // DeAuction
     uint16 constant IS_NOT_AGGREGATOR       = 4000;
     uint16 constant PRICE_OUT_OF_RANGE      = 4001;
-    uint16 constant IS_NOT_TOKEN_ROOT       = 4002;
-    uint16 constant IS_NOT_TOKEN_WALLET     = 4003;
+    uint16 constant AGGREGATOR_IS_FAIR      = 4002;
+    uint16 constant IS_NOT_TOKEN_ROOT       = 4003;
+    uint16 constant IS_NOT_TOKEN_WALLET     = 4004;
 
     // DeParticipant
     uint16 constant IS_NOT_OWNER            = 5000;

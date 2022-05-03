@@ -38,10 +38,6 @@ def _process_function_args(function: Callable, args: tuple, kwargs: dict, ignore
         result.pop(key)
     # key names to camelcase
     result = _camelcase_dict(result)
-    # fix big ints (ts4 bug)
-    for key, value in result.items():
-        if isinstance(value, int) and value >= 2 * 32:
-            result[key] = str(value)
     return result, options
 
 
@@ -54,7 +50,7 @@ def _find_sender(send_as: str, self: ts4.BaseContract, params: dict) -> Wallet:
 @decohints
 def solidity_function(send_as: str = 'owner', ignore: tuple = ()):
     def decorator(function: Callable):
-        def wrapper(self: ts4.BaseContract, *args, options: Options = None, **kwargs):
+        def wrapper(self: ts4.BaseContract, *args, **kwargs):
             method = stringcase.camelcase(function.__name__)
             params, options = _process_function_args(function, args, kwargs, ignore)
             sender = _find_sender(send_as, self, params)

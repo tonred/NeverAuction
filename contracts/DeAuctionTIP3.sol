@@ -6,14 +6,14 @@ pragma AbiHeader pubkey;
 
 import "DeAuction.sol";
 
-import "ton-eth-bridge-token-contracts/contracts/interfaces/IAcceptTokensTransferCallback.sol";
+import "ton-eth-bridge-token-contracts/contracts/interfaces/IAcceptTokensMintCallback.sol";
 import "ton-eth-bridge-token-contracts/contracts/interfaces/ITokenRoot.sol";
 import "ton-eth-bridge-token-contracts/contracts/interfaces/ITokenWallet.sol";
 
 
-contract DeAuctionTIP3 is DeAuction, IAcceptTokensTransferCallback {
+contract DeAuctionTIP3 is DeAuction, IAcceptTokensMintCallback {
 
-    address public _neverRoot;
+    address public _neverRoot;  // from details
     address public _neverWallet;
 
     function _init(TvmCell details) internal override {
@@ -35,11 +35,9 @@ contract DeAuctionTIP3 is DeAuction, IAcceptTokensTransferCallback {
         return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} (_neverRoot, _neverWallet);
     }
 
-    function onAcceptTokensTransfer(
+    function onAcceptTokensMint(
         address /*tokenRoot*/,
         uint128 amount,
-        address /*sender*/,
-        address /*senderWallet*/,
         address /*remainingGasTo*/,
         TvmCell /*payload*/
     ) public override inPhase(DePhase.WIN) {
@@ -63,8 +61,8 @@ contract DeAuctionTIP3 is DeAuction, IAcceptTokensTransferCallback {
         );
     }
 
-    function buildInitDetails(address neverRoot, address neverWallet) public pure returns (TvmCell details) {
-        return abi.encode(neverRoot, neverWallet);
+    function buildInitDetails(address neverRoot) public pure returns (TvmCell details) {
+        return abi.encode(neverRoot);
     }
 
 }

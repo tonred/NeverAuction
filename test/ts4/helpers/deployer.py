@@ -1,3 +1,5 @@
+from typing import Optional
+
 from tonos_ts4 import ts4
 
 from config import (
@@ -16,9 +18,12 @@ from contracts.auction import Auction
 from contracts.auction_root import AuctionRoot
 from contracts.de_auction import DeAuction
 from contracts.de_participant import DeParticipant
+from contracts.never_root import NeverRoot
 from helpers.bidder import Bidder
+from helpers.de_bidder import DeBidder
 from helpers.token_type import DeAuctionTokenType
 from utils.options import Options
+from utils.utils import random_address
 from utils.wallet import Wallet
 
 
@@ -30,15 +35,15 @@ class Deployer:
         if now is not None:
             ts4.core.set_now(0)
         self.token_type = token_type
+        self.elector = self.create_wallet()
         self.auction_root = self.create_auction_root()
         self.auction = self.create_auction()
-        self.aggregator, self.de_auction = self.create_de_auction()
+        self.aggregator_de_participant, self.de_auction = self.create_de_auction()
 
     def create_auction_root(self) -> AuctionRoot:
-        elector = self.create_wallet()
         bid_code = ts4.load_code_cell('Bid')
         auction_root = AuctionRoot({
-            'elector': elector.address,
+            'elector': self.elector.address,
             'auctionConfig': {
                 'fee': DEFAULT_FEE,
                 'deposit': DEFAULT_DEPOSIT,
@@ -53,13 +58,13 @@ class Deployer:
                 'makeBidDuration': DEFAULT_MAKE_BID_DURATION,
                 'initDetails': self.token_type.value,
             },
-        }, elector)
+        }, self.elector)
 
         platform_code = ts4.load_code_cell('Platform')
         auction_code = ts4.load_code_cell('Auction')
         de_auction_code = ts4.load_code_cell('DeAuction' + self.token_type.name)
         de_participant_code = ts4.load_code_cell('DeParticipant')
-        elector.run_target(auction_root, options=Options(0.3), method='setCodes', params={
+        self.elector.run_target(auction_root, options=Options(0.3), method='setCodes', params={
             'platformCode': platform_code.raw_,
             'auctionCode': auction_code.raw_,
             'deAuctionCode': de_auction_code.raw_,
@@ -76,12 +81,19 @@ class Deployer:
         de_auction = de_participant.create_de_auction(self.token_type)
         return de_participant, de_auction
 
+    def create_de_participant(self) -> DeParticipant:
+        owner = self.create_wallet()
+        return self.auction_root.create_de_participant(owner)
+
     @staticmethod
     def create_aggregator() -> Wallet:
         return Wallet(nickname='Aggregator', balance=int(1e6 * ts4.GRAM))
 
     def create_bidder(self, price: int, amount: int) -> Bidder:
         return Bidder(self.auction, price, amount)
+
+    def create_de_bidder(self, value: int, price: Optional[int]) -> DeBidder:
+        return DeBidder(self.de_auction, value, price)
 
     @staticmethod
     def create_wallet(**kwargs) -> Wallet:

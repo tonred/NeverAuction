@@ -7,8 +7,8 @@ from config import (
     DEFAULT_PRICES,
     DEFAULT_DEVIATION,
     DEFAULT_AGGREGATOR_FEE,
-    DEFAULT_VALUE,
-    DEFAULT_MSG_VALUE,
+    DEFAULT_AGGREGATOR_VALUE,
+    DEFAULT_AGGREGATOR_MSG_VALUE,
 )
 from contracts.de_auction import DeAuction
 from helpers.token_type import DeAuctionTokenType
@@ -36,27 +36,27 @@ class DeParticipant(BaseContract):
             prices: dict = DEFAULT_PRICES,  # noqa (is not changed)
             deviation: int = DEFAULT_DEVIATION,
             fee: int = DEFAULT_AGGREGATOR_FEE,
-            value: int = DEFAULT_VALUE,
-            options=Options.from_grams(DEFAULT_MSG_VALUE),
+            value: int = DEFAULT_AGGREGATOR_VALUE,
+            options=Options.from_grams(DEFAULT_AGGREGATOR_MSG_VALUE),
     ) -> DeAuction:
         nonce = self.root.call_getter('_nonce') - 1
         de_auction_address = self.root.expected_de_auction(nonce)
         return DeAuction(de_auction_address, token_type.name, self.root, self.owner)
 
     @solidity_function()
-    def stake(self, de_auction: ts4.Address, value: int, price_hash: int, options=Options(1)):
+    def stake(self, de_auction: ts4.Address, value: int, price_hash: int, options: Options):
         pass
 
     @solidity_function()
-    def remove_stake(self, de_auction: ts4.Address, value: int, options=Options(1)):
+    def remove_stake(self, de_auction: ts4.Address, value: int, options=Options(1.2)):
         pass
 
     @solidity_function()
-    def confirm_stake(self, de_auction: ts4.Address, price: int, salt: int, options=Options(1)):
+    def confirm_price(self, de_auction: ts4.Address, price: int, salt: int, options=Options(1.2)):
         pass
 
     @solidity_function()
-    def claim(self, de_auction: ts4.Address, options=Options(1)):
+    def claim(self, de_auction: ts4.Address, options=Options(1.2)):
         pass
 
     @solidity_getter()

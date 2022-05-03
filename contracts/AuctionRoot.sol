@@ -131,7 +131,9 @@ contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils,
         TvmCell initialParams = abi.encode(_auctionConfig, minLotSize, quotingPrice);
         _auction = new Platform{
             stateInit: stateInit,
-            value: Gas.DEPLOY_AUCTION_VALUE
+            value: Gas.DEPLOY_AUCTION_VALUE,
+            flag: MsgFlag.SENDER_PAYS_FEES,
+            bounce: false
         }(_auctionCode, initialParams, address(0));
         emit NewAuction(_auction);
         _isActionNow = true;
@@ -142,7 +144,9 @@ contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils,
         TvmCell initialParams;
         address deParticipant = new Platform{
             stateInit: stateInit,
-            value: Gas.DEPLOY_DE_PARTICIPANT_VALUE
+            value: Gas.DEPLOY_DE_PARTICIPANT_VALUE,
+            flag: MsgFlag.SENDER_PAYS_FEES,
+            bounce: false
         }(_deParticipantCode, initialParams, address(0));
         emit NewDeParticipant(deParticipant);
     }

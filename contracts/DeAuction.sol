@@ -105,7 +105,8 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
 
         _phase = DePhase.INITIALIZING;
         _init(_globalConfig.initDetails);
-        IDeParticipant(_aggregator).onDeAuctionInit{
+        address aggregatorDeParticipant = _deParticipantAddress(_root, _aggregator);
+        IDeParticipant(aggregatorDeParticipant).onDeAuctionInit{
             value: Gas.DE_AUCTION_ACTION_VALUE,
             flag: MsgFlag.SENDER_PAYS_FEES,
             bounce: false
@@ -168,9 +169,11 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
                 _aggregatorStake += value;
             }
         }
+        uint128 reserve = address(this).balance - msg.value + (success ? value : 0);
+        tvm.rawReserve(reserve, 0);
         IDeParticipant(msg.sender).onStake{
             value: 0,
-            flag: MsgFlag.REMAINING_GAS,
+            flag: MsgFlag.ALL_NOT_RESERVED,
             bounce: false
         }(_nonce, value, priceHash, success);
     }
@@ -259,6 +262,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
     function onRemoveBid() public override onlyAuction { revert(); }
 
     function confirmBid(uint128 price, uint256 salt) public override onlyAggregator inPhase(DePhase.BID_MADE) {
+        // todo fix amount to fit NEVER decimals
         PriceRange allowed = allowedPrice();
         require(_isInRange(price, allowed), ErrorCodes.PRICE_OUT_OF_RANGE);
         uint128 amount = _totalStake / price;
@@ -285,7 +289,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
         IAggregator(_aggregator).onWin{value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false}(price, amount);
     }
 
-    function pingAuctionFinish() public view override {
+    function pingAuctionFinish() public view override inPhase(DePhase.BID_CONFIRMED) {
         IAuction(_auction).getPhase{
             value: 0,
             flag: MsgFlag.REMAINING_GAS,
@@ -329,11 +333,11 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
     }
 
     function checkAggregator() public view override returns (bool isFair) {
-        if (now > _auctionDetails.confirmTime && _phase < DePhase.BID_MADE) {
+        if (now >= _auctionDetails.confirmTime && _phase < DePhase.BID_MADE) {
             // aggregator forgot to make bid
             return false;
         }
-        if (now > _auctionDetails.finishTime && _phase < DePhase.BID_CONFIRMED) {
+        if (now >= _auctionDetails.finishTime && _phase < DePhase.BID_CONFIRMED) {
             // aggregator forgot to confirm bid
             return false;
         }
@@ -342,9 +346,8 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
 
     function slash() public override cashBack {
         bool isFair = checkAggregator();
-        if (!isFair) {
-            _slash();
-        }
+        require(!isFair, ErrorCodes.AGGREGATOR_IS_FAIR);
+        _slash();
     }
 
     function _slash() private {
@@ -357,16 +360,19 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
         bool success = true;
         uint128 everValue = 0;
         uint128 neverValue = 0;
+        bool isAggregator = owner == _aggregator;
         if (_phase == DePhase.DISTRIBUTION) {
             everValue = math.muldiv(_everValue, value, _totalStake);
             neverValue = math.muldiv(_neverValue, value, _totalStake);
-            if (owner == _aggregator) {
+            if (isAggregator) {
                 neverValue += _aggregatorReward;
             }
         } else if (_phase == DePhase.LOSE) {
             everValue = value;
-        } else if (_phase == DePhase.SLASHED && msg.sender != _aggregator) {
-            everValue = value + math.muldiv(_aggregatorStake, value, _totalStake);
+        } else if (_phase == DePhase.SLASHED) {
+            if (!isAggregator) {
+                everValue = value + math.muldiv(_aggregatorStake, value, _totalStake);
+            }
         } else {
             success = false;
         }
