@@ -53,7 +53,7 @@ contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils,
     }
 
     modifier onlyDeParticipant(address owner) {
-        address deParticipant = _deParticipantAddress(owner);
+        address deParticipant = _deParticipantAddress(address(this), owner);
         require(msg.sender == deParticipant, ErrorCodes.IS_NOT_DE_PARTICIPANT);
         _;
     }
@@ -68,15 +68,15 @@ contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils,
 
 
     function expectedAuction(uint64 nonce) public view responsible override returns (address auction) {
-        return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} _auctionAddress(nonce);
+        return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} _auctionAddress(address(this), nonce);
     }
 
     function expectedDeParticipant(address owner) public view responsible override returns (address deParticipant) {
-        return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} _deParticipantAddress(owner);
+        return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} _deParticipantAddress(address(this), owner);
     }
 
     function expectedDeAuction(uint64 nonce) public view responsible override returns (address deAuction) {
-        return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} _deAuctionAddress(nonce);
+        return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} _deAuctionAddress(address(this), nonce);
     }
 
     function getDetails() public view responsible override returns (address elector, AuctionConfig auctionConfig, DeAuctionGlobalConfig deAuctionGlobalConfig) {
@@ -127,7 +127,7 @@ contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils,
         require(!_isActionNow, ErrorCodes.ALREADY_RUNNING);
         require(_auctionConfig.fee > Gas.DEPLOY_BID_VALUE, ErrorCodes.LOW_FEE_VALUE);
         require(_auctionConfig.deposit > _auctionConfig.fee, ErrorCodes.LOW_DEPOSIT_VALUE);
-        TvmCell stateInit = _buildAuctionStateInit(_nonce++);
+        TvmCell stateInit = _buildAuctionStateInit(address(this), _nonce++);
         TvmCell initialParams = abi.encode(_auctionConfig, minLotSize, quotingPrice);
         _auction = new Platform{
             stateInit: stateInit,
@@ -138,7 +138,7 @@ contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils,
     }
 
     function createDeParticipant() public override cashBack {
-        TvmCell stateInit = _buildDeParticipantStateInit(msg.sender);
+        TvmCell stateInit = _buildDeParticipantStateInit(address(this), msg.sender);
         TvmCell initialParams;
         address deParticipant = new Platform{
             stateInit: stateInit,
@@ -163,7 +163,7 @@ contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils,
         }
 
         DeAuctionConfig config = DeAuctionConfig(initConfig, _deAuctionGlobalConfig);
-        TvmCell stateInit = _buildDeAuctionStateInit(_nonce++);
+        TvmCell stateInit = _buildDeAuctionStateInit(address(this), _nonce++);
         TvmCell initialParams = abi.encode(_auction, config);
         address deAuction = new Platform{
             stateInit: stateInit,

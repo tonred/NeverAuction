@@ -35,7 +35,7 @@ contract DeParticipant is IDeParticipant, PlatformUtils, TransferUtils {
     }
 
     modifier onlyDeAuction(uint64 nonce) {
-        address deAuction = _deAuctionAddress(nonce);
+        address deAuction = _deAuctionAddress(_root, nonce);
         require(msg.sender == deAuction, ErrorCodes.IS_NOT_DE_AUCTION);
         _;
     }

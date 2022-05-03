@@ -79,7 +79,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
     }
 
     modifier onlyDeParticipant(address owner) {
-        address deParticipant = _deParticipantAddress(owner);
+        address deParticipant = _deParticipantAddress(_root, owner);
         require(msg.sender == deParticipant, ErrorCodes.IS_NOT_DE_PARTICIPANT);
         _;
     }

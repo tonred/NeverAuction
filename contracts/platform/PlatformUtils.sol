@@ -13,41 +13,41 @@ abstract contract PlatformUtils {
 
     TvmCell public _platformCode;
 
-    function _auctionAddress(uint64 nonce) internal view returns (address) {
-        TvmCell stateInit = _buildAuctionStateInit(nonce);
+    function _auctionAddress(address root, uint64 nonce) internal view returns (address) {
+        TvmCell stateInit = _buildAuctionStateInit(root, nonce);
         return calcAddress(stateInit);
     }
 
-    function _deAuctionAddress(uint64 nonce) internal view returns (address) {
-        TvmCell stateInit = _buildDeAuctionStateInit(nonce);
+    function _deAuctionAddress(address root, uint64 nonce) internal view returns (address) {
+        TvmCell stateInit = _buildDeAuctionStateInit(root, nonce);
         return calcAddress(stateInit);
     }
 
-    function _deParticipantAddress(address owner) internal view returns (address) {
-        TvmCell stateInit = _buildDeParticipantStateInit(owner);
+    function _deParticipantAddress(address root, address owner) internal view returns (address) {
+        TvmCell stateInit = _buildDeParticipantStateInit(root, owner);
         return calcAddress(stateInit);
     }
 
-    function _buildAuctionStateInit(uint64 nonce) internal view returns (TvmCell) {
+    function _buildAuctionStateInit(address root, uint64 nonce) internal view returns (TvmCell) {
         TvmCell initialData = abi.encode(nonce);
-        return _buildPlatformStateInit(PlatformType.AUCTION, initialData);
+        return _buildPlatformStateInit(root, PlatformType.AUCTION, initialData);
     }
 
-    function _buildDeAuctionStateInit(uint64 nonce) internal view returns (TvmCell) {
+    function _buildDeAuctionStateInit(address root, uint64 nonce) internal view returns (TvmCell) {
         TvmCell initialData = abi.encode(nonce);
-        return _buildPlatformStateInit(PlatformType.DE_AUCTION, initialData);
+        return _buildPlatformStateInit(root, PlatformType.DE_AUCTION, initialData);
     }
 
-    function _buildDeParticipantStateInit(address owner) internal view returns (TvmCell) {
+    function _buildDeParticipantStateInit(address root, address owner) internal view returns (TvmCell) {
         TvmCell initialData = abi.encode(owner);
-        return _buildPlatformStateInit(PlatformType.DE_PARTICIPANT, initialData);
+        return _buildPlatformStateInit(root, PlatformType.DE_PARTICIPANT, initialData);
     }
 
-    function _buildPlatformStateInit(PlatformType platformType, TvmCell initialData) private view returns (TvmCell) {
+    function _buildPlatformStateInit(address root, PlatformType platformType, TvmCell initialData) private view returns (TvmCell) {
         return tvm.buildStateInit({
             contr: Platform,
             varInit: {
-                root: address(this),
+                root: root,
                 platformType: uint8(platformType),
                 initialData: initialData,
                 platformCode: _platformCode
