@@ -50,8 +50,9 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
     AuctionDetails public _auctionDetails;
     uint128 public _totalStake;
 
-    uint128 _avgPrice;
+    uint256 _avgTotal;
     uint128 _avgStake;
+    uint128 _avgPrice;
 
     uint128 public _everValue;
     uint128 public _neverValue;
@@ -192,10 +193,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
         bool success = false;
         if (_phase == DePhase.SUB_CONFIRM && _isInRange(price, _prices)) {
             emit ConfirmPrice(owner, price);
-            _avgPrice = uint128(
-                (uint256(_avgPrice) * _avgStake + price * value) /
-                (_avgStake + value)
-            );
+            _avgTotal += uint256(price) * value;
             _avgStake += value;
             success = true;
         }
@@ -206,7 +204,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
         }(_nonce, success);
     }
 
-    function finishSubVoting() public override inPhase(DePhase.SUB_FINISH) cashBack {
+    function finishSubVoting() public override doUpdate inPhase(DePhase.SUB_FINISH) cashBack {
         uint128 minStake = _auctionDetails.minLotSize * _prices.max;
         if (_totalStake < minStake) {
             // not enough stake to bid for all price range
@@ -215,6 +213,8 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
             _phase = DePhase.WAITING_BID;
             if (_avgStake == 0) {
                 _avgPrice = uint128((uint256(_prices.min) + _prices.max) / 2);
+            } else {
+                _avgPrice = uint128(_avgTotal / _avgStake);
             }
         }
         emit FinishSubVoting();
@@ -242,11 +242,11 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
     }
 
     function makeBid(uint256 hash) public view override onlyAggregator inPhase(DePhase.WAITING_BID) cashBack {
-        IAuction(_auction).makeBid{
+        IAuction(_auction).makeDeBid{
             value: _auctionDetails.deposit + Gas.DE_AUCTION_ACTION_VALUE,
             flag: MsgFlag.SENDER_PAYS_FEES,
             bounce: true
-        }(hash);
+        }(_nonce, hash);
     }
 
     function onMakeBid() public override onlyAuction {

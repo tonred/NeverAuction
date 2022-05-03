@@ -52,7 +52,7 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
     }
 
     modifier onlyDeAuction(uint64 nonce) {
-        address deAuction = _deAuctionAddress(address(this), nonce);
+        address deAuction = _deAuctionAddress(_root, nonce);
         require(msg.sender == deAuction, ErrorCodes.IS_NOT_DE_AUCTION);
         _;
     }
