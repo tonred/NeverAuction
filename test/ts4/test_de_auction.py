@@ -1,8 +1,10 @@
 import unittest
 from enum import IntEnum
+from typing import List
 
 from config import *
 from contracts.de_participant import DeParticipant
+from helpers.de_bidder import DeBidder
 from helpers.deployer import Deployer
 from utils.options import Options
 from utils.utils import random_salt
@@ -93,17 +95,22 @@ class TestDeAuction(unittest.TestCase):
         self.auction.finish(bidder.wallet)
         self._check_phase(DePhase.WIN)
 
-        # todo distribution
+        winner = self.auction.call_responsible('getWinner')
+        self.deployer.never_root.mint(winner['amount'], self.de_auction.address)
+        self._check_phase(DePhase.DISTRIBUTION)
 
     def test_change_stake(self):
         bidder = self.deployer.create_de_bidder(100 * ts4.GRAM, price=None)
         self.assertEqual(self._de_participant_stake(bidder.de_participant), 0, 'Wrong stake')
         bidder.stake()
         self.assertEqual(self._de_participant_stake(bidder.de_participant), 100 * ts4.GRAM, 'Wrong stake')
+        self.assertEqual(self.de_auction.total_stake(), DEFAULT_AGGREGATOR_VALUE + 100 * ts4.GRAM, 'Wrong total stake')
         bidder.stake(5 * ts4.GRAM)
         self.assertEqual(self._de_participant_stake(bidder.de_participant), 105 * ts4.GRAM, 'Wrong stake')
+        self.assertEqual(self.de_auction.total_stake(), DEFAULT_AGGREGATOR_VALUE + 105 * ts4.GRAM, 'Wrong total stake')
         bidder.remove_stake(50 * ts4.GRAM)
         self.assertEqual(self._de_participant_stake(bidder.de_participant), 55 * ts4.GRAM, 'Wrong stake')
+        self.assertEqual(self.de_auction.total_stake(), DEFAULT_AGGREGATOR_VALUE + 55 * ts4.GRAM, 'Wrong total stake')
 
     def test_remove_big_stake(self):
         de_participant = self.deployer.create_de_participant()
@@ -151,8 +158,34 @@ class TestDeAuction(unittest.TestCase):
         self.assertDictEqual(expected_allowed_price, allowed_price, 'Wrong allowed price')
 
     def test_distribution(self):
+        # win
         bidders = self._win_auction()
-        # todo check distribution
+        self._check_phase(DePhase.WIN)
+        winner = self.auction.call_responsible('getWinner')
+        self.assertEqual(winner['owner'], self.de_auction.address, 'Wrong winner')
+
+        # distribution
+        self.deployer.never_root.mint(winner['amount'], self.de_auction.address)
+        self._check_phase(DePhase.DISTRIBUTION)
+        ever, never, aggregator_reward = self.de_auction.call_responsible('getDistribution')
+        expected_ever = self.de_auction.total_stake() - winner['value']
+        self.assertEqual(ever, expected_ever, 'Wrong ever value')
+        expected_never = winner['amount'] - aggregator_reward
+        self.assertEqual(never, expected_never, 'Wrong never value')
+        expected_aggregator_reward = winner['amount'] * DEFAULT_AGGREGATOR_FEE // PERCENT_DENOMINATOR
+        self.assertEqual(aggregator_reward, expected_aggregator_reward, 'Wrong aggregator reward')
+
+        # claim
+        for bidder in bidders:
+            bidder.claim()
+            never_wallet = self.deployer.never_root.get_wallet(bidder.wallet)
+            expected_never_balance = expected_never * bidder.value // self.de_auction.total_stake()
+            self.assertEqual(never_wallet.balance(), expected_never_balance, 'Wrong never balance')
+        self.aggregator_de_participant.claim(self.de_auction.address)
+        never_wallet = self.deployer.never_root.get_wallet(self.aggregator)
+        expected_never_balance = \
+            expected_never * DEFAULT_AGGREGATOR_VALUE // self.de_auction.total_stake() + aggregator_reward
+        self.assertEqual(never_wallet.balance(), expected_never_balance, 'Wrong aggregator never balance')
 
     def test_two_de_auctions(self):
         random_guy = self.deployer.create_wallet()
@@ -184,9 +217,9 @@ class TestDeAuction(unittest.TestCase):
         self.assertEqual(self.auction.call_responsible('getWinner')['owner'], de_auction_2.address, 'Wrong winner')
 
         # winner gets back difference between first and second bid
-        total_stake_2 = de_auction_2.call_responsible('getStakes')[0]
-        amount_2 = total_stake_2 // price_2
-        expected_return_value = total_stake_2 - price_1 * amount_2
+        total_stake_2 = de_auction_2.total_stake()
+        amount_2 = ts4.GRAM * total_stake_2 // price_2
+        expected_return_value = total_stake_2 - price_1 * amount_2 // ts4.GRAM
         return_value = de_auction_2.call_responsible('getDistribution')[0]
         self.assertEqual(return_value, expected_return_value, 'Wrong return value')
 
@@ -218,8 +251,9 @@ class TestDeAuction(unittest.TestCase):
         bidder_2_balance_before = bidder_2.wallet.balance
         bidder_1.claim()
         bidder_2.claim()
-        self._check_balance(bidder_1.wallet, bidder_1_balance_before + expected_bidder_1_reward)
-        self._check_balance(bidder_2.wallet, bidder_2_balance_before + expected_bidder_2_reward)
+        claim_gas_fee = ts4.GRAM
+        self._check_balance(bidder_1.wallet, bidder_1_balance_before + expected_bidder_1_reward - claim_gas_fee)
+        self._check_balance(bidder_2.wallet, bidder_2_balance_before + expected_bidder_2_reward - claim_gas_fee)
 
     def test_slash_fair_aggregator(self):
         self._win_auction()
@@ -244,7 +278,7 @@ class TestDeAuction(unittest.TestCase):
         self.de_auction.slash(slasher)  # aggregator is not fair now
         self._check_phase(DePhase.SLASHED)
 
-    def _win_auction(self) -> list:
+    def _win_auction(self) -> List[DeBidder]:
         bidders = self._prepare_bidders()
         price = int(0.36 * ts4.GRAM)
         salt = random_salt()
@@ -259,7 +293,7 @@ class TestDeAuction(unittest.TestCase):
         self.auction.finish(random_guy)
         return bidders
 
-    def _prepare_bidders(self) -> list:
+    def _prepare_bidders(self) -> List[DeBidder]:
         # calculate price only for (0, 4, 5) bidders
         bidders = [
             self.deployer.create_de_bidder(150 * ts4.GRAM, price=int(0.36 * ts4.GRAM)),  # ok, but stake will be -50
@@ -272,6 +306,9 @@ class TestDeAuction(unittest.TestCase):
         for bidder in bidders:
             bidder.stake()
         bidders[0].remove_stake(50 * ts4.GRAM)
+        total_stake = sum(bidder.value for bidder in bidders) + DEFAULT_AGGREGATOR_VALUE
+        self.assertEqual(self.de_auction.total_stake(), total_stake, 'Wrong total stake')
+
         ts4.core.set_now(SUB_CONFIRM_TIME)
         for i in (0, 1, 3, 4):
             bidders[i].confirm_price()

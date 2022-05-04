@@ -8,8 +8,8 @@ if typing.TYPE_CHECKING:
 
 class BaseContract(ts4.BaseContract):
 
-    def __init__(self, address: ts4.Address, abi_suffix: str = ''):
-        name = self.__class__.__name__ + abi_suffix
+    def __init__(self, address: ts4.Address, abi_name: str = None):
+        name = abi_name or self.__class__.__name__
         super().__init__(name, {}, nickname=name, address=address)
 
     def call_responsible(self, method: str, params: dict = None) -> typing.Any:

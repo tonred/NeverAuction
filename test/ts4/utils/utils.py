@@ -14,11 +14,3 @@ def random_address() -> ts4.Address:
 
 def random_salt() -> int:
     return random.randint(0, 2 ** 256 - 1)
-
-
-# todo remove
-def dispatch_with_exception(expect_ec: int, expect_index: int = 0):
-    for _ in range(expect_index):
-        ts4.dispatch_one_message()
-    ts4.dispatch_one_message(expect_ec=expect_ec)
-    ts4.dispatch_messages()

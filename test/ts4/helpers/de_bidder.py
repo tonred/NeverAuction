@@ -30,6 +30,7 @@ class DeBidder:
     def remove_stake(self, value: int = None):
         value = value or self.value
         self.de_participant.remove_stake(self.de_auction.address, value)
+        self.value -= value
 
     def confirm_price(self):
         assert self.price is not None, 'No price'

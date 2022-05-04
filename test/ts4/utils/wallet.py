@@ -12,7 +12,7 @@ from utils.utils import random_address
 
 class Wallet(ts4.BaseContract):
 
-    def __init__(self, nickname: str = 'Wallet', balance: int = 10000 * ts4.GRAM):
+    def __init__(self, nickname: str = 'Wallet', balance: int = 5000 * ts4.GRAM):
         super().__init__(
             'Wallet',
             {},

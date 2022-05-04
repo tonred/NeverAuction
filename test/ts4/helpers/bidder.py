@@ -1,3 +1,5 @@
+from tonos_ts4 import ts4
+
 from contracts.auction import Auction
 from utils.options import Options
 from utils.utils import random_salt
@@ -15,7 +17,7 @@ class Bidder:
         self.hash = auction.calc_bid_hash(price, amount, self.wallet.address, self.salt)
 
     def value(self) -> int:
-        return self.price * self.amount
+        return self.price * self.amount // ts4.GRAM
 
     def bid_data(self) -> dict:
         return {

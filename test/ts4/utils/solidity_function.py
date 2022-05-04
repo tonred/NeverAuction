@@ -23,7 +23,7 @@ def _process_function_args(function: Callable, args: tuple, kwargs: dict, ignore
     # default values
     parameters = inspect.signature(function).parameters
     for parameter in parameters.values():
-        if parameter.default != inspect.Parameter.empty:
+        if parameter.default is not inspect.Parameter.empty:
             result[parameter.name] = parameter.default
     # kwargs values
     result.update(kwargs)

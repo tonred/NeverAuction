@@ -37,6 +37,7 @@ class Deployer:
         self.token_type = token_type
         self.elector = self.create_wallet()
         self.auction_root = self.create_auction_root()
+        self.never_root = self.create_never_root()
         self.auction = self.create_auction()
         self.aggregator_de_participant, self.de_auction = self.create_de_auction()
 
@@ -87,7 +88,7 @@ class Deployer:
 
     @staticmethod
     def create_aggregator() -> Wallet:
-        return Wallet(nickname='Aggregator', balance=int(1e6 * ts4.GRAM))
+        return Wallet(nickname='Aggregator')
 
     def create_bidder(self, price: int, amount: int) -> Bidder:
         return Bidder(self.auction, price, amount)
@@ -98,3 +99,6 @@ class Deployer:
     @staticmethod
     def create_wallet(**kwargs) -> Wallet:
         return Wallet(**kwargs)
+
+    def create_never_root(self) -> NeverRoot:
+        return NeverRoot(self.elector)

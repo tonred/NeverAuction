@@ -8,7 +8,7 @@ from utils.utils import ZERO_ADDRESS
 from utils.wallet import Wallet
 
 DEFAULT_PRICE = 4 * ts4.GRAM
-DEFAULT_AMOUNT = 1234
+DEFAULT_AMOUNT = 500 * ts4.GRAM
 
 
 class Phase(IntEnum):
@@ -146,9 +146,9 @@ class TestAuction(unittest.TestCase):
 
     def test_many_bidder(self):
         second_price = DEFAULT_PRICE + int(0.2 * ts4.GRAM)
-        second_amount = DEFAULT_AMOUNT + 300
+        second_amount = DEFAULT_AMOUNT + 100
         third_price = DEFAULT_PRICE + int(0.3 * ts4.GRAM)
-        third_amount = DEFAULT_AMOUNT + 100
+        third_amount = DEFAULT_AMOUNT + 50
         bidder_1 = self.deployer.create_bidder(DEFAULT_PRICE, DEFAULT_AMOUNT)  # return immediately in confirmation
         bidder_2 = self.deployer.create_bidder(second_price, second_amount)  # return after confirmation of third bid
         bidder_3 = self.deployer.create_bidder(third_price, third_amount)  # winner
@@ -169,7 +169,7 @@ class TestAuction(unittest.TestCase):
             'owner': bidder_3.wallet.address,
             'price': bidder_2.price,  # second price
             'amount': bidder_3.amount,
-            'value': bidder_2.price * bidder_3.amount,
+            'value': bidder_2.price * bidder_3.amount // ts4.GRAM,
         }
         self.assertDictEqual(winner, expected_winner, 'Wrong winner')
 

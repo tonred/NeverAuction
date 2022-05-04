@@ -14,13 +14,16 @@ if typing.TYPE_CHECKING:
 
 class DeAuction(BaseContract):
 
-    def __init__(self, address: ts4.Address, abi_suffix: str, root: 'AuctionRoot', aggregator: Wallet):
-        super().__init__(address, abi_suffix)
+    def __init__(self, address: ts4.Address, abi_name: str, root: 'AuctionRoot', aggregator: Wallet):
+        super().__init__(address, abi_name)
         self.root = root
         self.aggregator = aggregator
 
     def auction(self) -> ts4.Address:
         return self.root.current_auction()
+
+    def total_stake(self) -> int:
+        return self.call_responsible('getStakes')[0]
 
     @solidity_function(send_as='wallet')
     def finish_sub_voting(self, wallet: Wallet, options=Options(0.3)):

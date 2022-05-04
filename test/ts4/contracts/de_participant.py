@@ -41,7 +41,8 @@ class DeParticipant(BaseContract):
     ) -> DeAuction:
         nonce = self.root.call_getter('_nonce') - 1
         de_auction_address = self.root.expected_de_auction(nonce)
-        return DeAuction(de_auction_address, token_type.name, self.root, self.owner)
+        abi_name = 'DeAuction' + token_type.name
+        return DeAuction(de_auction_address, abi_name, self.root, self.owner)
 
     @solidity_function()
     def stake(self, de_auction: ts4.Address, value: int, price_hash: int, options: Options):
