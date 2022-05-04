@@ -9,7 +9,7 @@ import "./interfaces/internal/IAuction.sol";
 import "./interfaces/internal/IAuctionRoot.sol";
 import "./platform/PlatformUtils.sol";
 import "./structures/AuctionConfig.sol";
-import "./utils/Constants.sol";
+import "./utils/Converter.sol";
 import "./utils/ErrorCodes.sol";
 import "./utils/Gas.sol";
 import "./utils/HashUtils.sol";
@@ -159,7 +159,7 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
 
     /*
     Confirm bid
-    @param price    Real price for 1 piece
+    @param price    Real price for 1 token
     @param amount   Amount to buy
     @param salt     Random value that was used to calculate hash in `calcBidHash` method
     @value          You must send all value of your bid, can be calculated as [price * amount + fee - deposit]
@@ -167,7 +167,7 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
     function confirmBid(uint128 price, uint128 amount, uint256 salt) public view override inPhase(Phase.CONFIRM) {
         require(price >= _quotingPrice, ErrorCodes.LOW_PRICE);
         require(amount >= _minLotSize, ErrorCodes.LOW_AMOUNT);
-        uint128 value = price * amount;
+        uint128 value = Converter.toValue(price, amount);
         require(msg.value + _deposit >= value + _fee, ErrorCodes.LOW_MSG_VALUE);
 
         uint256 hash = calcBidHash(price, amount, msg.sender, salt);
@@ -198,7 +198,7 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
     /*
     Calculates hash of bid
     Can be used off-chain before `makeBid` and `removeBid` functions
-    @param price    Price for 1 piece (greater than or equal to quoting price)
+    @param price    Price for 1 token (greater than or equal to quoting price)
     @param amount   Amount to buy (greater than or equal to min lot size)
     @param sender   Address of sender
     @param salt     Random 256-bit value (please use really random number)
@@ -224,7 +224,7 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
             _winner = _first;
         } else {
             // one winner (many bids)
-            uint128 returnValue = (_first.price - _second.price) * _first.amount;
+            uint128 returnValue = Converter.toValue(_first.price - _second.price, _first.amount);
             _first.owner.transfer({
                 value: returnValue,
                 flag: MsgFlag.SENDER_PAYS_FEES,
@@ -232,7 +232,7 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
             });
             _winner = _first;
             _winner.price = _second.price;
-            _winner.value = _second.price * _first.amount;
+            _winner.value = Converter.toValue(_second.price, _first.amount);
         }
 
         if (success) {

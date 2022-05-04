@@ -9,7 +9,7 @@ import "./interfaces/internal/IAuction.sol";
 import "./interfaces/internal/IDeAuction.sol";
 import "./interfaces/internal/IDeParticipant.sol";
 import "./platform/PlatformUtils.sol";
-import "./utils/Constants.sol";
+import "./utils/Converter.sol";
 import "./utils/ErrorCodes.sol";
 import "./utils/Gas.sol";
 import "./utils/HashUtils.sol";
@@ -240,7 +240,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
     function calcBidHash(uint128 price, uint256 salt) public view override returns (uint256 hash) {
         PriceRange allowed = allowedPrice();
         require(_isInRange(price, allowed), ErrorCodes.PRICE_OUT_OF_RANGE);
-        uint128 amount = _totalStake / price;
+        uint128 amount = Converter.toAmount(_totalStake, price);
         return _calcBidHash(price, amount, address(this), salt);
     }
 
@@ -262,14 +262,12 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
     function onRemoveBid() public override onlyAuction { revert(); }
 
     function confirmBid(uint128 price, uint256 salt) public override onlyAggregator inPhase(DePhase.BID_MADE) {
-        // todo fix amount to fit NEVER decimals
         PriceRange allowed = allowedPrice();
         require(_isInRange(price, allowed), ErrorCodes.PRICE_OUT_OF_RANGE);
-        uint128 amount = _totalStake / price;
-        uint128 value = price * amount;
-        tvm.rawReserve(address(this).balance - msg.value - value, 2);
+        uint128 amount = Converter.toAmount(_totalStake, price);
+        tvm.rawReserve(address(this).balance - msg.value - _totalStake, 2);
         IAuction(_auction).confirmBid{
-            value: value + Gas.DE_AUCTION_ACTION_VALUE,
+            value: _totalStake + Gas.DE_AUCTION_ACTION_VALUE,
             flag: MsgFlag.SENDER_PAYS_FEES,
             bounce: true
         }(price, amount, salt);
@@ -284,7 +282,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
 
     function onWin(uint128 price, uint128 amount) public override onlyAuction {
         _phase = DePhase.WIN;
-        _everValue = _totalStake - price * amount;
+        _everValue = _totalStake - Converter.toValue(price, amount);
         emit Win(price, amount);
         IAggregator(_aggregator).onWin{value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false}(price, amount);
     }
@@ -383,9 +381,17 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
                 _sendNever(owner, neverValue);
             }
         }
+        // if `everValue` is too low, then send `ALL_NOT_RESERVED` (which is about Gas.DE_PARTICIPANT_ACTION_VALUE)
+        uint128 msgValue = everValue;
+        uint8 msgFlag = MsgFlag.SENDER_PAYS_FEES;
+        if (everValue < Gas.DE_PARTICIPANT_ACTION_VALUE) {
+            _reserve();
+            msgValue = 0;
+            msgFlag = MsgFlag.ALL_NOT_RESERVED;
+        }
         IDeParticipant(msg.sender).onClaim{
-            value: everValue,
-            flag: MsgFlag.REMAINING_GAS,
+            value: msgValue,
+            flag: msgFlag,
             bounce: false
         }(_nonce, success);
     }
