@@ -4,4 +4,4 @@ echo "Don't forget to set DevNet network in locklift.config.js"
 ./demo/3-test.sh
 npm run 1-deploy-account
 npm run 2-deploy-never-root
-npm run 3-deploy-auction-root
+npm run 5-deploy-auction-root-demo

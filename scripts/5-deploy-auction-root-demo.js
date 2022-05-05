@@ -23,7 +23,7 @@ const main = async () => {
   const DeAuction = await locklift.factory.getContract(deAuctionContract);
   const DeParticipant = await locklift.factory.getContract('DeParticipant');
   const Bid = await locklift.factory.getContract('Bid');
-  const AuctionRoot = await locklift.factory.getContract('AuctionRoot');
+  const TestAuctionRoot = await locklift.factory.getContract('TestAuctionRoot');
 
   // For TIP3 store only `neverRoot` in init details
   let encoded = await locklift.ton.client.abi.encode_boc({
@@ -38,8 +38,8 @@ const main = async () => {
   let initDetails = encoded.boc;
 
   logger.log('Deploying Auction Root');
-  let auctionRoot = await locklift.giver.deployContract({
-    contract: AuctionRoot,
+  let demoAuctionRoot = await locklift.giver.deployContract({
+    contract: TestAuctionRoot,
     constructorParams: {
       elector: tempAdmin.address,
       auctionConfig: {
@@ -51,7 +51,7 @@ const main = async () => {
         bidCode: Bid.code,
       },
       deAuctionGlobalConfig: {
-        subOpenDuration: 60,      // 1 days
+        subOpenDuration: 10,      // 1 days
         subConfirmDuration: 60,   // 1 days
         makeBidDuration: 60,      // 1 days
         initDetails: initDetails,
@@ -65,7 +65,7 @@ const main = async () => {
 
   logger.log(`Installing codes`);
   await tempAdmin.runTarget({
-    contract: auctionRoot,
+    contract: demoAuctionRoot,
     method: 'setCodes',
     params: {
       platformCode: Platform.code,
@@ -76,8 +76,8 @@ const main = async () => {
     value: locklift.utils.convertCrystal(0.3, 'nano')
   });
 
-  await logContract(auctionRoot);
-  migration.store(auctionRoot, `AuctionRoot`);
+  await logContract(demoAuctionRoot);
+  migration.store(demoAuctionRoot, `TestAuctionRoot`);
 };
 
 

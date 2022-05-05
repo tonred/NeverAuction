@@ -1,0 +1,371 @@
+{
+	"ABI version": 2,
+	"version": "2.2",
+	"header": ["pubkey", "time", "expire"],
+	"functions": [
+		{
+			"name": "constructor",
+			"inputs": [
+				{"name":"elector","type":"address"},
+				{"components":[{"name":"fee","type":"uint128"},{"name":"deposit","type":"uint128"},{"name":"openDuration","type":"uint32"},{"name":"deBidDuration","type":"uint32"},{"name":"confirmDuration","type":"uint32"},{"name":"bidCode","type":"cell"}],"name":"auctionConfig","type":"tuple"},
+				{"components":[{"name":"subOpenDuration","type":"uint32"},{"name":"subConfirmDuration","type":"uint32"},{"name":"makeBidDuration","type":"uint32"},{"name":"initDetails","type":"cell"}],"name":"deAuctionGlobalConfig","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "createAuctionTest",
+			"inputs": [
+				{"name":"minLotSize","type":"uint128"},
+				{"name":"quotingPrice","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "expectedAuction",
+			"inputs": [
+				{"name":"answerId","type":"uint32"},
+				{"name":"nonce","type":"uint64"}
+			],
+			"outputs": [
+				{"name":"auction","type":"address"}
+			]
+		},
+		{
+			"name": "expectedDeParticipant",
+			"inputs": [
+				{"name":"answerId","type":"uint32"},
+				{"name":"owner","type":"address"}
+			],
+			"outputs": [
+				{"name":"deParticipant","type":"address"}
+			]
+		},
+		{
+			"name": "expectedDeAuction",
+			"inputs": [
+				{"name":"answerId","type":"uint32"},
+				{"name":"nonce","type":"uint64"}
+			],
+			"outputs": [
+				{"name":"deAuction","type":"address"}
+			]
+		},
+		{
+			"name": "expectedAuctionHashCode",
+			"inputs": [
+				{"name":"answerId","type":"uint32"},
+				{"name":"auction","type":"address"}
+			],
+			"outputs": [
+				{"name":"hash","type":"uint256"}
+			]
+		},
+		{
+			"name": "expectedBidHashCode",
+			"inputs": [
+				{"name":"answerId","type":"uint32"},
+				{"name":"auction","type":"address"},
+				{"name":"owner","type":"address"}
+			],
+			"outputs": [
+				{"name":"hash","type":"uint256"}
+			]
+		},
+		{
+			"name": "getDetails",
+			"inputs": [
+				{"name":"answerId","type":"uint32"}
+			],
+			"outputs": [
+				{"name":"elector","type":"address"},
+				{"components":[{"name":"fee","type":"uint128"},{"name":"deposit","type":"uint128"},{"name":"openDuration","type":"uint32"},{"name":"deBidDuration","type":"uint32"},{"name":"confirmDuration","type":"uint32"},{"name":"bidCode","type":"cell"}],"name":"auctionConfig","type":"tuple"},
+				{"components":[{"name":"subOpenDuration","type":"uint32"},{"name":"subConfirmDuration","type":"uint32"},{"name":"makeBidDuration","type":"uint32"},{"name":"initDetails","type":"cell"}],"name":"deAuctionGlobalConfig","type":"tuple"}
+			]
+		},
+		{
+			"name": "getCodes",
+			"inputs": [
+				{"name":"answerId","type":"uint32"}
+			],
+			"outputs": [
+				{"name":"auctionCode","type":"cell"},
+				{"name":"deAuctionCode","type":"cell"},
+				{"name":"deParticipantCode","type":"cell"}
+			]
+		},
+		{
+			"name": "currentAuction",
+			"inputs": [
+				{"name":"answerId","type":"uint32"}
+			],
+			"outputs": [
+				{"name":"auction","type":"optional(address)"}
+			]
+		},
+		{
+			"name": "setCodes",
+			"inputs": [
+				{"name":"platformCode","type":"cell"},
+				{"name":"auctionCode","type":"cell"},
+				{"name":"deAuctionCode","type":"cell"},
+				{"name":"deParticipantCode","type":"cell"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "changeElector",
+			"inputs": [
+				{"name":"elector","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "changeAuctionConfig",
+			"inputs": [
+				{"components":[{"name":"fee","type":"uint128"},{"name":"deposit","type":"uint128"},{"name":"openDuration","type":"uint32"},{"name":"deBidDuration","type":"uint32"},{"name":"confirmDuration","type":"uint32"},{"name":"bidCode","type":"cell"}],"name":"auctionConfig","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "changeDeAuctionGlobalConfig",
+			"inputs": [
+				{"components":[{"name":"subOpenDuration","type":"uint32"},{"name":"subConfirmDuration","type":"uint32"},{"name":"makeBidDuration","type":"uint32"},{"name":"initDetails","type":"cell"}],"name":"deAuctionGlobalConfig","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "createAuction",
+			"inputs": [
+				{"name":"minLotSize","type":"uint128"},
+				{"name":"quotingPrice","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "createDeParticipant",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "createDeAuction",
+			"inputs": [
+				{"name":"owner","type":"address"},
+				{"components":[{"name":"description","type":"string"},{"components":[{"name":"min","type":"uint128"},{"name":"max","type":"uint128"}],"name":"prices","type":"tuple"},{"name":"deviation","type":"uint128"},{"name":"aggregatorFee","type":"uint128"},{"name":"aggregator","type":"address"},{"name":"aggregatorStake","type":"uint128"}],"name":"initConfig","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onFinish",
+			"inputs": [
+				{"name":"success","type":"bool"},
+				{"components":[{"name":"owner","type":"address"},{"name":"price","type":"uint128"},{"name":"amount","type":"uint128"},{"name":"value","type":"uint128"}],"name":"winner","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "upgrade",
+			"inputs": [
+				{"name":"code","type":"cell"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "calcAddress",
+			"inputs": [
+				{"name":"stateInit","type":"cell"}
+			],
+			"outputs": [
+				{"name":"value0","type":"address"}
+			]
+		},
+		{
+			"name": "_platformCode",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_platformCode","type":"cell"}
+			]
+		},
+		{
+			"name": "_randomNonce",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_randomNonce","type":"uint256"}
+			]
+		},
+		{
+			"name": "_elector",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_elector","type":"address"}
+			]
+		},
+		{
+			"name": "_auctionConfig",
+			"inputs": [
+			],
+			"outputs": [
+				{"components":[{"name":"fee","type":"uint128"},{"name":"deposit","type":"uint128"},{"name":"openDuration","type":"uint32"},{"name":"deBidDuration","type":"uint32"},{"name":"confirmDuration","type":"uint32"},{"name":"bidCode","type":"cell"}],"name":"_auctionConfig","type":"tuple"}
+			]
+		},
+		{
+			"name": "_deAuctionGlobalConfig",
+			"inputs": [
+			],
+			"outputs": [
+				{"components":[{"name":"subOpenDuration","type":"uint32"},{"name":"subConfirmDuration","type":"uint32"},{"name":"makeBidDuration","type":"uint32"},{"name":"initDetails","type":"cell"}],"name":"_deAuctionGlobalConfig","type":"tuple"}
+			]
+		},
+		{
+			"name": "_nonce",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_nonce","type":"uint64"}
+			]
+		},
+		{
+			"name": "_isActionNow",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_isActionNow","type":"bool"}
+			]
+		},
+		{
+			"name": "_auction",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_auction","type":"address"}
+			]
+		},
+		{
+			"name": "_auctionCode",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_auctionCode","type":"cell"}
+			]
+		},
+		{
+			"name": "_deAuctionCode",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_deAuctionCode","type":"cell"}
+			]
+		},
+		{
+			"name": "_deParticipantCode",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_deParticipantCode","type":"cell"}
+			]
+		}
+	],
+	"data": [
+		{"key":1,"name":"_randomNonce","type":"uint256"}
+	],
+	"events": [
+		{
+			"name": "ElectorChange",
+			"inputs": [
+				{"name":"from","type":"address"},
+				{"name":"to","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "AuctionConfigChange",
+			"inputs": [
+				{"components":[{"name":"fee","type":"uint128"},{"name":"deposit","type":"uint128"},{"name":"openDuration","type":"uint32"},{"name":"deBidDuration","type":"uint32"},{"name":"confirmDuration","type":"uint32"},{"name":"bidCode","type":"cell"}],"name":"from","type":"tuple"},
+				{"components":[{"name":"fee","type":"uint128"},{"name":"deposit","type":"uint128"},{"name":"openDuration","type":"uint32"},{"name":"deBidDuration","type":"uint32"},{"name":"confirmDuration","type":"uint32"},{"name":"bidCode","type":"cell"}],"name":"to","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "DeAuctionGlobalConfigChange",
+			"inputs": [
+				{"components":[{"name":"subOpenDuration","type":"uint32"},{"name":"subConfirmDuration","type":"uint32"},{"name":"makeBidDuration","type":"uint32"},{"name":"initDetails","type":"cell"}],"name":"from","type":"tuple"},
+				{"components":[{"name":"subOpenDuration","type":"uint32"},{"name":"subConfirmDuration","type":"uint32"},{"name":"makeBidDuration","type":"uint32"},{"name":"initDetails","type":"cell"}],"name":"to","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "NewAuction",
+			"inputs": [
+				{"name":"auction","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "NewDeParticipant",
+			"inputs": [
+				{"name":"deParticipant","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "NewDeAuction",
+			"inputs": [
+				{"name":"auction","type":"address"},
+				{"name":"deAuction","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "Finish",
+			"inputs": [
+				{"name":"success","type":"bool"},
+				{"components":[{"name":"owner","type":"address"},{"name":"price","type":"uint128"},{"name":"amount","type":"uint128"},{"name":"value","type":"uint128"}],"name":"winner","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "CodeUpgraded",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		}
+	],
+	"fields": [
+		{"name":"_pubkey","type":"uint256"},
+		{"name":"_timestamp","type":"uint64"},
+		{"name":"_constructorFlag","type":"bool"},
+		{"name":"_platformCode","type":"cell"},
+		{"name":"_randomNonce","type":"uint256"},
+		{"name":"_elector","type":"address"},
+		{"components":[{"name":"fee","type":"uint128"},{"name":"deposit","type":"uint128"},{"name":"openDuration","type":"uint32"},{"name":"deBidDuration","type":"uint32"},{"name":"confirmDuration","type":"uint32"},{"name":"bidCode","type":"cell"}],"name":"_auctionConfig","type":"tuple"},
+		{"components":[{"name":"subOpenDuration","type":"uint32"},{"name":"subConfirmDuration","type":"uint32"},{"name":"makeBidDuration","type":"uint32"},{"name":"initDetails","type":"cell"}],"name":"_deAuctionGlobalConfig","type":"tuple"},
+		{"name":"_nonce","type":"uint64"},
+		{"name":"_isActionNow","type":"bool"},
+		{"name":"_auction","type":"address"},
+		{"name":"_auctionCode","type":"cell"},
+		{"name":"_deAuctionCode","type":"cell"},
+		{"name":"_deParticipantCode","type":"cell"}
+	]
+}
