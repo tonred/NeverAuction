@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "setup": "npm install && git pull && npm install",
+    "setup": "npm install && git pull --recurse-submodules && npm install",
     "build": "export $(cat .env | xargs) && locklift build --config locklift.config.js",
-    "test": "locklift test --test test/ --config locklift.config.js --network local --disable-build",
+    "test": "source venv/bin/activate && cd test/ts4 && ./run_tests.sh && cd ../..",
     "1-deploy-account": "locklift run -s scripts/1-deploy-account.js --config locklift.config.js --network local --disable-build",
     "2-deploy-never-root": "locklift run -s scripts/2-deploy-never-root.js --config locklift.config.js --network local --disable-build",
     "3-deploy-auction-root": "locklift run -s scripts/3-deploy-auction-root.js --config locklift.config.js --network local --disable-build",

@@ -69,13 +69,19 @@ class TestAuction(unittest.TestCase):
         remove_bid_value = int(0.3 * ts4.GRAM)
         self._check_balance(bidder.wallet, balance_before - DEFAULT_FEE - remove_bid_value)
 
+    def test_remove_bid_wrong_phase(self):
+        bidder = self.deployer.create_bidder(DEFAULT_PRICE, DEFAULT_AMOUNT)
+        bidder.make_bid()
+        ts4.core.set_now(CONFIRM_TIME)
+        self.auction.remove_bid(bidder.wallet, bidder.hash, Options(0.5, expect_ec=1006))
+
     def test_make_bid_wrong_phase(self):
-        ts4.core.set_now(DEFAULT_OPEN_DURATION)
+        ts4.core.set_now(DE_BID_TIME)
         wallet = self.deployer.create_wallet()
         self.auction.make_bid(wallet, 0, Options(DEFAULT_BID_VALUE, expect_ec=1006))
 
     def test_make_de_bid_wrong(self):
-        ts4.core.set_now(DEFAULT_OPEN_DURATION)
+        ts4.core.set_now(DE_BID_TIME)
         wallet = self.deployer.create_wallet()
         self.auction.make_de_bid(wallet, 0, 0, Options(DEFAULT_BID_VALUE, expect_ec=1004))
 

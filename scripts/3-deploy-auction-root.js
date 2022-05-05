@@ -46,15 +46,15 @@ const main = async () => {
       auctionConfig: {
         fee: 1e9,                 // 1e9
         deposit: 2e9,             // 1000e9
-        openDuration: 60,         // 7 days
-        deBidDuration: 60,        // 2 days
-        confirmDuration: 60,      // 2 days
+        openDuration: 120,        // 7 days
+        deBidDuration: 120,       // 2 days
+        confirmDuration: 120,     // 2 days
         bidCode: Bid.code,
       },
       deAuctionGlobalConfig: {
-        subOpenDuration: 30,      // 1 days
-        subConfirmDuration: 30,   // 1 days
-        makeBidDuration: 30,      // 1 days
+        subOpenDuration: 60,      // 1 days
+        subConfirmDuration: 60,   // 1 days
+        makeBidDuration: 60,      // 1 days
         initDetails: initDetails,
       },
     },
