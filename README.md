@@ -4,15 +4,17 @@ Project Github: https://github.com/tonred/NeverAuction
 
 DevNet Auction Root: `0:d37297b1eba504c3ec3c9d3c4fab7c3d4eb5152e39e380d727705c20fa8a2ff3`
 
+Viewer: [https://never.ton.red](https://never.ton.red)
+
 TG: @Abionics, @get_username
 
 ## Key features:
 * Really blind Vickrey auction
 * DeAuction for group bid with interesting concept
 * No mappings, infinity amount of bids and DeParticipants
-* Well tested, 30 `ts4` tests
+* Well tested, **30** `ts4` tests
 * A lot of custom configurations
-* Browser viewer for deployed auctions
+* Browser viewer for auctions
 
 ## Requirements:
 * [locklift](https://www.npmjs.com/package/locklift) `1.5.3`
@@ -31,9 +33,8 @@ TG: @Abionics, @get_username
 ```shell
 npm run build
 ```
-// todo
 
-Read technical description below
+[Technical description](#Technical-description) is below
 
 ## Test
 ```shell
@@ -52,11 +53,17 @@ In case of trouble with `npm`, just go to `test/ts4` folder and call `run_tests.
 npm run 1-deploy-account.js
 npm run 2-deploy-never-root.js
 npm run 3-deploy-auction-root.js
-npm run 4-deploy-never-elector.js  # (optionally)
+npm run 4-deploy-never-elector.js  # optionally
+npm run 5-deploy-auction-root-demo.js  # for manually testing
 ```
-Don't forget to set up network url in `locklift.config.js` before deployment.
-In step **#3** you can set Auction Root owner (elector) to your wallet address
-in order to create and test auctions on your own way
+Don't forget to set up network url in `locklift.config.js` before deployment
+
+## Viewer
+Viewer listen for events and display all info about current auction
+
+Link to viewer: https://never.ton.red
+
+![viewer](docs/viewer.png)
 
 ## Technical description
 
@@ -224,7 +231,7 @@ function finish() external;
 ### DeParticipant
 Source code: [DeParticipant.sol](contracts/DeParticipant.sol)
 
-This is a user data for creation and interation with DeAuction.
+This is a user data for creation and interaction with DeAuction.
 It is deployed once for each wallet. At has locker in order to prevent
 double spending and double bidding. See diagrams in DeAuction section
 because DeParticipant are closely related with DeAuction
@@ -270,11 +277,11 @@ prices (if exist), in second phase Aggregator must make a bid
 Consensus price are calculated as average between DeParticipant prices, where each price has
 weight of its owner's stake. To be exact, the formula is:
 
-![DeAuction-consensus-formula](docs/DeAuction-consensus-formula.png)
+![DeAuction-consensus-formula](docs/consensus-formula.png)
 
 If no one price was confirm, then consensus price is average in possible price range. If someone
-doesn't provide a desire price, or forget to confirm, then his price is not included is
-average calculation. But his stake is participating and such DeParticipant will get his
+doesn't provide a desire price, or forget to confirm, then his price is not included is final
+price calculation. But his stake is participating and such DeParticipant will get his
 reward in case of winning
 
 #### DeAuction phases
@@ -303,6 +310,9 @@ via `claim` in DeParticipant
 via `claim` in DeParticipant
 11) `SLASHED` - used when Aggregator was slashed. Everyone except the Aggregator can get his stake
 back via `claim` in DeParticipant, see slashing details below
+
+Phase and DePhase matching:
+![phase-dephase](docs/phase-dephase.png)
 
 #### DeAuction slashing
 Everyone can locally check if Aggregator must be slashed via `checkAggregator` method.
@@ -526,13 +536,7 @@ function slash() external;
 
 </details>
 
-## Viewer
-Viewer listen for events and display all info about current auction
-
-![viewer](docs/viewer.png)
-
 ## Constants
-
 All contact system is very configurable. There are several configuration places:
 1) contracts/utils/Constants.sol (MIN_LOT_SIZE) - contact constants
 2) contracts/utils/Gas.sol - contact gas (already optimized)
@@ -565,3 +569,19 @@ Additional script demo for manual testing: `./demo/demo-devnet.sh`
 
 Or just use `build/TestAuctionRoot.abi.json` with Auction Root in DevNet
 at address `0:d37297b1eba504c3ec3c9d3c4fab7c3d4eb5152e39e380d727705c20fa8a2ff3`
+
+### Integration notes
+During this contest our team work a lot with
+[solution of Phase 1](https://firebasestorage.googleapis.com/v0/b/ton-labs.appspot.com/o/documents%2Fapplication%2Fpdf%2Fjz5i5hcndnktkekjat-NOT%20Pruvendo%20Implementation%20draft%203.pdf?alt=media&token=015ee545-fe73-432c-a525-9a4e672128ba).
+We must admit that code of solution from Phase 1 is not ready for production
+and requires a lot of fixes. Some of critical fixes we implemented in a [fork](https://github.com/tonred/not_oracle),
+but there is a lot of bugs are left.
+
+Some of them:
+1) Security bugs (for example no sender checks - [sample](https://github.com/Pruvendo/not_oracle/blob/main/src/contracts/not_elector/NotElector.sol#L82))
+2) Gas management bugs (for example no value, default 0.01 evers in not enough - 
+[sample one](https://github.com/Pruvendo/not_oracle/blob/main/src/contracts/not_elector/NotElector.sol#L106)
+and [two](https://github.com/Pruvendo/not_oracle/blob/main/src/contracts/not_elector/NotElector.sol#L256))
+4) Code duplication like [here](https://github.com/Pruvendo/not_oracle/blob/main/src/off-chain/run_not_validation.py#L25) and
+[here](https://github.com/Pruvendo/not_oracle/blob/main/src/off-chain/run_not_validation_demo.py#L47)
+for deploying the same contract
