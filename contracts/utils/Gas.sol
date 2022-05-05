@@ -28,5 +28,6 @@ library Gas {
     // Elector
     uint128 constant MINT_VALUE                     = 1 ton;
     uint128 constant CREATE_AUCTION_VALUE           = 1.2 ton;  // more than DEPLOY_AUCTION_VALUE
+    uint128 constant TRANSFER_AUCTION_ROOT_VALUE    = 0.5 ton;
 
 }

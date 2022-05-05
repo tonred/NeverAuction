@@ -28,10 +28,10 @@ const main = async () => {
   let neverElector = await locklift.giver.deployContract({
     contract: NeverElector,
     constructorParams: {
-      signUpStageBeginning: SIGN_UP_START_TIME,
-      signUpStageDuration: SIGN_UP_DURATION,
-      validationStageBeginning: VALIDATION_START_TIME,
-      validationStageDuration: VALIDATION_DURATION,
+      signUpStageBeginningArg: SIGN_UP_START_TIME,
+      signUpStageDurationArg: SIGN_UP_DURATION,
+      validationStageBeginningArg: VALIDATION_START_TIME,
+      validationStageDurationArg: VALIDATION_DURATION,
       auctionRoot: auctionRoot.address,
       neverRoot: neverRoot.address,
     },

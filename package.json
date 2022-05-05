@@ -10,7 +10,8 @@
     "1-deploy-account": "locklift run -s scripts/1-deploy-account.js --config locklift.config.js --network local --disable-build",
     "2-deploy-never-root": "locklift run -s scripts/2-deploy-never-root.js --config locklift.config.js --network local --disable-build",
     "3-deploy-auction-root": "locklift run -s scripts/3-deploy-auction-root.js --config locklift.config.js --network local --disable-build",
-    "4-deploy-never-elector": "locklift run -s scripts/4-deploy-never-elector.js --config locklift.config.js --network local --disable-build"
+    "4-deploy-never-elector": "locklift run -s scripts/4-deploy-never-elector.js --config locklift.config.js --network local --disable-build",
+    "transfer-auction-root": "locklift run -s scripts/transfer-auction-root.js --config locklift.config.js --network local --disable-build"
   },
   "author": "TONRED",
   "license": "ISC",

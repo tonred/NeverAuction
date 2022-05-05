@@ -25,21 +25,31 @@ contract NeverElectorAuction is NotElector, IElector, RandomNonce {
     address public _neverRoot;
 
     constructor(
-        uint signUpStageBeginning,
-        uint signUpStageDuration,
-        uint validationStageBeginning,
-        uint validationStageDuration,
+        uint signUpStageBeginningArg,
+        uint signUpStageDurationArg,
+        uint validationStageBeginningArg,
+        uint validationStageDurationArg,
         address auctionRoot,
         address neverRoot
     ) public NotElector(
-        signUpStageBeginning,
-        signUpStageDuration,
-        validationStageBeginning,
-        validationStageDuration
+        signUpStageBeginningArg,
+        signUpStageDurationArg,
+        validationStageBeginningArg,
+        validationStageDurationArg
     ) {
         _minLotSize = Constants.MIN_LOT_SIZE;
         _auctionRoot = auctionRoot;
         _neverRoot = neverRoot;
+    }
+
+    function transferAuctionRoot(address newOwner) public override {
+        require(tvm.pubkey() == msg.pubkey() && msg.pubkey() != 0, Errors.WRONG_PUB_KEY);
+        tvm.accept();
+        IAuctionRoot(_auctionRoot).changeElector{
+            value: Gas.TRANSFER_AUCTION_ROOT_VALUE,
+            flag: MsgFlag.SENDER_PAYS_FEES,
+            bounce: false
+        }(newOwner);
     }
 
     function _afterRevealing(uint128 quotingPrice) internal override {

@@ -1,0 +1,252 @@
+{
+	"ABI version": 2,
+	"version": "2.2",
+	"header": ["pubkey", "time", "expire"],
+	"functions": [
+		{
+			"name": "constructor",
+			"inputs": [
+				{"name":"signUpStageBeginningArg","type":"uint256"},
+				{"name":"signUpStageDurationArg","type":"uint256"},
+				{"name":"validationStageBeginningArg","type":"uint256"},
+				{"name":"validationStageDurationArg","type":"uint256"},
+				{"name":"auctionRoot","type":"address"},
+				{"name":"neverRoot","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "transferAuctionRoot",
+			"inputs": [
+				{"name":"newOwner","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onAuctionFinish",
+			"inputs": [
+				{"name":"success","type":"bool"},
+				{"name":"winner","type":"address"},
+				{"name":"price","type":"uint128"},
+				{"name":"amount","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "signUp",
+			"inputs": [
+				{"name":"stakeSize","type":"uint128"},
+				{"name":"validationStartTime","type":"uint256"},
+				{"name":"validationDuration","type":"uint256"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "endElection",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "setQuotation",
+			"inputs": [
+				{"name":"hashedQuotation","type":"uint256"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "revealQuotation",
+			"inputs": [
+				{"name":"oneUSDCost","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "quotationIsTooOld",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "cleanUp",
+			"inputs": [
+				{"name":"destination","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "status",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"status","type":"uint8"}
+			]
+		},
+		{
+			"name": "notValidatorsRank",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"notValidatorsRank","type":"map(address,uint128)"}
+			]
+		},
+		{
+			"name": "signUpStageBeginning",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"signUpStageBeginning","type":"uint256"}
+			]
+		},
+		{
+			"name": "signUpStageDuration",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"signUpStageDuration","type":"uint256"}
+			]
+		},
+		{
+			"name": "validationStageBeginning",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"validationStageBeginning","type":"uint256"}
+			]
+		},
+		{
+			"name": "validationStageDuration",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"validationStageDuration","type":"uint256"}
+			]
+		},
+		{
+			"name": "_randomNonce",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_randomNonce","type":"uint256"}
+			]
+		},
+		{
+			"name": "_minLotSize",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_minLotSize","type":"uint128"}
+			]
+		},
+		{
+			"name": "_auctionRoot",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_auctionRoot","type":"address"}
+			]
+		},
+		{
+			"name": "_neverRoot",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_neverRoot","type":"address"}
+			]
+		}
+	],
+	"data": [
+		{"key":1,"name":"_randomNonce","type":"uint256"}
+	],
+	"events": [
+		{
+			"name": "NoWinner",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "Winner",
+			"inputs": [
+				{"name":"winner","type":"address"},
+				{"name":"price","type":"uint128"},
+				{"name":"amount","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "electionIsOverEvent",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "oneUSDCostCalculatedEvent",
+			"inputs": [
+				{"name":"oneUSDCost","type":"uint128"},
+				{"name":"time","type":"uint256"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "oneUSDCostCalculationStarted",
+			"inputs": [
+				{"name":"time","type":"uint256"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "notValidatorSlashed",
+			"inputs": [
+				{"name":"_address","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "oops",
+			"inputs": [
+				{"components":[{"name":"notValidator","type":"address"},{"name":"value","type":"uint128"}],"name":"xs","type":"tuple[]"}
+			],
+			"outputs": [
+			]
+		}
+	],
+	"fields": [
+		{"name":"_pubkey","type":"uint256"},
+		{"name":"_timestamp","type":"uint64"},
+		{"name":"_constructorFlag","type":"bool"},
+		{"name":"status","type":"uint8"},
+		{"name":"revealingStartTime","type":"uint256"},
+		{"name":"notValidatorsStake","type":"map(address,uint128)"},
+		{"name":"random","type":"uint256"},
+		{"name":"lastNow","type":"uint256"},
+		{"name":"notValidatorsRank","type":"map(address,uint128)"},
+		{"name":"notValidatorsRankSize","type":"uint256"},
+		{"name":"badChecksInARow","type":"map(address,uint256)"},
+		{"name":"revealedQuotations","type":"map(address,uint128)"},
+		{"name":"quotationsToReveal","type":"uint256"},
+		{"name":"signUpStageBeginning","type":"uint256"},
+		{"name":"signUpStageDuration","type":"uint256"},
+		{"name":"validationStageBeginning","type":"uint256"},
+		{"name":"validationStageDuration","type":"uint256"},
+		{"name":"_randomNonce","type":"uint256"},
+		{"name":"_minLotSize","type":"uint128"},
+		{"name":"_auctionRoot","type":"address"},
+		{"name":"_neverRoot","type":"address"}
+	]
+}

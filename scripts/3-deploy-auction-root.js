@@ -78,7 +78,7 @@ const main = async () => {
   });
 
   let userAddress = prompt(
-      'Address to transfer token root for testing\n' +
+      'Address where transfer never root (ENTER IT ONLY IF YOU WANT TO MANUALLY TEST)\n' +
       'This will break next (4th) step because script will not be able to transfer owner to Never Elector\n' +
       'Address (or just enter to skip): '
   );
