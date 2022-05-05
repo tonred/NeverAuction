@@ -79,6 +79,11 @@ contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils,
         return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} _deAuctionAddress(address(this), nonce);
     }
 
+    function expectedAuctionHashCode(address auction) public view responsible override returns (uint256 hash) {
+        TvmCell code = _calcDeAuctionCode(auction);
+        return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} tvm.hash(code);
+    }
+
     function getDetails() public view responsible override returns (address elector, AuctionConfig auctionConfig, DeAuctionGlobalConfig deAuctionGlobalConfig) {
         return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} (_elector, _auctionConfig, _deAuctionGlobalConfig);
     }
@@ -169,12 +174,13 @@ contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils,
         DeAuctionConfig config = DeAuctionConfig(initConfig, _deAuctionGlobalConfig);
         TvmCell stateInit = _buildDeAuctionStateInit(address(this), _nonce++);
         TvmCell initialParams = abi.encode(_auction, config);
+        TvmCell deAuctionCode = _calcDeAuctionCode(_auction);
         address deAuction = new Platform{
             stateInit: stateInit,
             value: 0,
             flag: MsgFlag.REMAINING_GAS,
             bounce: false
-        }(_deAuctionCode, initialParams, address(0));
+        }(deAuctionCode, initialParams, address(0));
         emit NewDeAuction(_auction, deAuction);
     }
 
@@ -197,6 +203,11 @@ contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils,
         tvm.setcode(code);
         tvm.setCurrentCode(code);
         onCodeUpgrade(data);
+    }
+
+    function _calcDeAuctionCode(address auction) private view returns (TvmCell) {
+        TvmCell salt = abi.encode(auction);
+        return tvm.setCodeSalt(_deAuctionCode, salt);
     }
 
     function onCodeUpgrade(TvmCell data) private {
