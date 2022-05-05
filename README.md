@@ -44,6 +44,9 @@ There are 30 different test cases. They cover both Auction and DeAuction usage.
 Set env variable `TS4_VERBOSE=true` in order to see flow of method calls.
 In case of trouble with `npm`, just go to `test/ts4` folder and call `run_tests.sh` manually
 
+![test1](docs/test1.png)
+![test2](docs/test2.png)
+
 ## Deployment
 ```shell
 npm run 1-deploy-account.js
@@ -91,9 +94,9 @@ sequenceDiagram
 
     external -) 0fa94171cb0565789224814561cc558e59315971ee9d03085de3dcb5f8b94d95e: sendTransaction
     0fa94171cb0565789224814561cc558e59315971ee9d03085de3dcb5f8b94d95e ->> 040e454e24d436557a1ab10ffb7305be07ad067eab25f0fbda58a500c6abd3c8e: makeBid
-    040e454e24d436557a1ab10ffb7305be07ad067eab25f0fbda58a500c6abd3c8e ->> 0f8826d6816f436d77aad381979dafdf1022e3d8c04f6c1d35cda28023f4ab2a7: ~constructor
+    040e454e24d436557a1ab10ffb7305be07ad067eab25f0fbda58a500c6abd3c8e ->> 0f8826d6816f436d77aad381979dafdf1022e3d8c04f6c1d35cda28023f4ab2a7: constructor
     040e454e24d436557a1ab10ffb7305be07ad067eab25f0fbda58a500c6abd3c8e --) external: MakeBid
-    040e454e24d436557a1ab10ffb7305be07ad067eab25f0fbda58a500c6abd3c8e ->> 0fa94171cb0565789224814561cc558e59315971ee9d03085de3dcb5f8b94d95e: ~onMakeBid
+    040e454e24d436557a1ab10ffb7305be07ad067eab25f0fbda58a500c6abd3c8e ->> 0fa94171cb0565789224814561cc558e59315971ee9d03085de3dcb5f8b94d95e: onMakeBid
 
     participant external as #60;external#62;
     participant 040e454e24d436557a1ab10ffb7305be07ad067eab25f0fbda58a500c6abd3c8e as Auction
@@ -120,9 +123,9 @@ sequenceDiagram
 
     external -) 0fa94171cb0565789224814561cc558e59315971ee9d03085de3dcb5f8b94d95e: sendTransaction
     0fa94171cb0565789224814561cc558e59315971ee9d03085de3dcb5f8b94d95e ->> 064017f20f04c8d587ab72ac893e6a15ba94e990410b99a94103c2ca018e536ee: removeBid
-    064017f20f04c8d587ab72ac893e6a15ba94e990410b99a94103c2ca018e536ee ->> 0edbe68fc206aeb9e7385e3ed8eb04c845264aac54155c65c0f6402f7f400fb13: ~remove
+    064017f20f04c8d587ab72ac893e6a15ba94e990410b99a94103c2ca018e536ee ->> 0edbe68fc206aeb9e7385e3ed8eb04c845264aac54155c65c0f6402f7f400fb13: remove
     0edbe68fc206aeb9e7385e3ed8eb04c845264aac54155c65c0f6402f7f400fb13 ->> 064017f20f04c8d587ab72ac893e6a15ba94e990410b99a94103c2ca018e536ee: onRemoveBid
-    064017f20f04c8d587ab72ac893e6a15ba94e990410b99a94103c2ca018e536ee ->> 0fa94171cb0565789224814561cc558e59315971ee9d03085de3dcb5f8b94d95e: ~onRemoveBid
+    064017f20f04c8d587ab72ac893e6a15ba94e990410b99a94103c2ca018e536ee ->> 0fa94171cb0565789224814561cc558e59315971ee9d03085de3dcb5f8b94d95e: onRemoveBid
     064017f20f04c8d587ab72ac893e6a15ba94e990410b99a94103c2ca018e536ee --) external: RemoveBid
     064017f20f04c8d587ab72ac893e6a15ba94e990410b99a94103c2ca018e536ee ->> 0fa94171cb0565789224814561cc558e59315971ee9d03085de3dcb5f8b94d95e: #60;transfer#62;
 
@@ -151,9 +154,9 @@ sequenceDiagram
 
     external -) 0fa94171cb0565789224814561cc558e59315971ee9d03085de3dcb5f8b94d95e: sendTransaction
     0fa94171cb0565789224814561cc558e59315971ee9d03085de3dcb5f8b94d95e ->> 040e454e24d436557a1ab10ffb7305be07ad067eab25f0fbda58a500c6abd3c8e: confirmBid
-    040e454e24d436557a1ab10ffb7305be07ad067eab25f0fbda58a500c6abd3c8e ->> 0f8826d6816f436d77aad381979dafdf1022e3d8c04f6c1d35cda28023f4ab2a7: ~confirm
+    040e454e24d436557a1ab10ffb7305be07ad067eab25f0fbda58a500c6abd3c8e ->> 0f8826d6816f436d77aad381979dafdf1022e3d8c04f6c1d35cda28023f4ab2a7: confirm
     0f8826d6816f436d77aad381979dafdf1022e3d8c04f6c1d35cda28023f4ab2a7 ->> 040e454e24d436557a1ab10ffb7305be07ad067eab25f0fbda58a500c6abd3c8e: onConfirmBid
-    040e454e24d436557a1ab10ffb7305be07ad067eab25f0fbda58a500c6abd3c8e ->> 0fa94171cb0565789224814561cc558e59315971ee9d03085de3dcb5f8b94d95e: ~onConfirmBid
+    040e454e24d436557a1ab10ffb7305be07ad067eab25f0fbda58a500c6abd3c8e ->> 0fa94171cb0565789224814561cc558e59315971ee9d03085de3dcb5f8b94d95e: onConfirmBid
     040e454e24d436557a1ab10ffb7305be07ad067eab25f0fbda58a500c6abd3c8e --) external: ConfirmBid
 
     participant external as #60;external#62;
@@ -181,11 +184,11 @@ sequenceDiagram
 
     external -) 0fa94171cb0565789224814561cc558e59315971ee9d03085de3dcb5f8b94d95e: sendTransaction
     0fa94171cb0565789224814561cc558e59315971ee9d03085de3dcb5f8b94d95e ->> 040e454e24d436557a1ab10ffb7305be07ad067eab25f0fbda58a500c6abd3c8e: finish
-    040e454e24d436557a1ab10ffb7305be07ad067eab25f0fbda58a500c6abd3c8e ->> 0fa94171cb0565789224814561cc558e59315971ee9d03085de3dcb5f8b94d95e: ~onWin
+    040e454e24d436557a1ab10ffb7305be07ad067eab25f0fbda58a500c6abd3c8e ->> 0fa94171cb0565789224814561cc558e59315971ee9d03085de3dcb5f8b94d95e: onWin
     040e454e24d436557a1ab10ffb7305be07ad067eab25f0fbda58a500c6abd3c8e --) external: Finish
     040e454e24d436557a1ab10ffb7305be07ad067eab25f0fbda58a500c6abd3c8e ->> 0c86dbf16cf391b6dc99948adc97b6693af6635b7247fc74678fb43dcd2e6c939: onFinish
     0c86dbf16cf391b6dc99948adc97b6693af6635b7247fc74678fb43dcd2e6c939 --) external: Finish
-    0c86dbf16cf391b6dc99948adc97b6693af6635b7247fc74678fb43dcd2e6c939 ->> 0fa94171cb0565789224814561cc558e59315971ee9d03085de3dcb5f8b94d95e: ~onAuctionFinish
+    0c86dbf16cf391b6dc99948adc97b6693af6635b7247fc74678fb43dcd2e6c939 ->> 0fa94171cb0565789224814561cc558e59315971ee9d03085de3dcb5f8b94d95e: onAuctionFinish
 
     participant external as #60;external#62;
     participant 040e454e24d436557a1ab10ffb7305be07ad067eab25f0fbda58a500c6abd3c8e as Auction
@@ -276,29 +279,29 @@ reward in case of winning
 
 #### DeAuction phases
 DeAuctions can have such phases (let call them DePhase, see [DePhase.sol](contracts/structures/DePhase.sol)):
-1) INITIALIZING - used when contract is not inited
-2) SUB_OPEN - it this phase everyone can join and stake. Also, everyone, except the Aggregator,
+1) `INITIALIZING` - used when contract is not inited
+2) `SUB_OPEN` - it this phase everyone can join and stake. Also, everyone, except the Aggregator,
 can remove his stake, partially or fully. All these actions are done via DeParticipant methods
 `stake` and `removeStake` (price hash can be calculated via `calcPriceHash` method)
-3) SUB_CONFIRM - in this phase users that provide price in previous step can confirm it via
+3) `SUB_CONFIRM` - in this phase users that provide price in previous step can confirm it via
 `confirmPrice` method in DeParticipant
-4) SUB_FINISH - this phase means that time for confirming price is passed. Someone should call
+4) `SUB_FINISH` - this phase means that time for confirming price is passed. Someone should call
 `finishSubVoting` in order to calculate consensus price, stop DeAuction if not enough fund and
 continue to next phase
-5) WAITING_BID - this phase means that Aggregator must make a bid. He should locally call
+5) `WAITING_BID` - this phase means that Aggregator must make a bid. He should locally call
 `allowedPrice` to get allowed price range, `calcBidHash` to calculate bid hash and finally
 `makeBid` to make bid in main Auction. Don't forget that allowed price is always in
 DeAuction price range, and does not differ from the consensus value by more than
 `deviation` percents (in other case `calcBidHash` will throw an exception)
-6) BID_MADE - means that Aggregator made bid, but Aggregator should
+6) `BID_MADE` - means that Aggregator made bid, but Aggregator should
 track Auction phase in order to don't forget to confirm bid
-7) BID_CONFIRMED - means that Aggregator confirmed bid (which is so obvious)
-8) WIN - used when DeAuction won, but Never tokens are not transferred yet
-9) DISTRIBUTION  - means that never tokens are transferred, everyone can claim them
+7) `BID_CONFIRMED` - means that Aggregator confirmed bid (which is so obvious)
+8) `WIN` - used when DeAuction won, but Never tokens are not transferred yet
+9) `DISTRIBUTION`  - means that never tokens are transferred, everyone can claim them
 via `claim` in DeParticipant
-10) LOSE - means that DeAuction lose (or not enough funds), everyone can claim his stake back
+10) `LOSE` - means that DeAuction lose (or not enough funds), everyone can claim his stake back
 via `claim` in DeParticipant
-11) SLASHED - used when Aggregator was slashed. Everyone except the Aggregator can get his stake
+11) `SLASHED` - used when Aggregator was slashed. Everyone except the Aggregator can get his stake
 back via `claim` in DeParticipant, see slashing details below
 
 #### DeAuction slashing
@@ -321,12 +324,12 @@ sequenceDiagram
     0b4d8d88307a798d2817ae47ca16166071ad00bf87c8158588af719a3a8a84b25 ->> 0fa94171cb0565789224814561cc558e59315971ee9d03085de3dcb5f8b94d95e: #60;transfer#62;
     0b4d8d88307a798d2817ae47ca16166071ad00bf87c8158588af719a3a8a84b25 ->> 0d37297b1eba504c3ec3c9d3c4fab7c3d4eb5152e39e380d727705c20fa8a2ff3: createDeAuction
     0d37297b1eba504c3ec3c9d3c4fab7c3d4eb5152e39e380d727705c20fa8a2ff3 --) external: NewDeAuction
-    0d37297b1eba504c3ec3c9d3c4fab7c3d4eb5152e39e380d727705c20fa8a2ff3 ->>+ 0729c0b4f98e6f4191d204069ce5fd0a56b4ca162d3bd29e8bf6489250f1eebab: ~constructor
+    0d37297b1eba504c3ec3c9d3c4fab7c3d4eb5152e39e380d727705c20fa8a2ff3 ->>+ 0729c0b4f98e6f4191d204069ce5fd0a56b4ca162d3bd29e8bf6489250f1eebab: constructor
     0729c0b4f98e6f4191d204069ce5fd0a56b4ca162d3bd29e8bf6489250f1eebab ->> 073ed104a7397feaf4f4a5f847ebda71691c52fd79b0eb0a177cd4c77de5733f9: getDetails
     073ed104a7397feaf4f4a5f847ebda71691c52fd79b0eb0a177cd4c77de5733f9 ->> 0729c0b4f98e6f4191d204069ce5fd0a56b4ca162d3bd29e8bf6489250f1eebab: onGetDetails
     0729c0b4f98e6f4191d204069ce5fd0a56b4ca162d3bd29e8bf6489250f1eebab ->> 0b4d8d88307a798d2817ae47ca16166071ad00bf87c8158588af719a3a8a84b25: onDeAuctionInit
     0b4d8d88307a798d2817ae47ca16166071ad00bf87c8158588af719a3a8a84b25 --) external: NewDeAuction
-    0b4d8d88307a798d2817ae47ca16166071ad00bf87c8158588af719a3a8a84b25 ->> 0fa94171cb0565789224814561cc558e59315971ee9d03085de3dcb5f8b94d95e: ~0x57aa5849(address,int128)
+    0b4d8d88307a798d2817ae47ca16166071ad00bf87c8158588af719a3a8a84b25 ->> 0fa94171cb0565789224814561cc558e59315971ee9d03085de3dcb5f8b94d95e: onDeAuctionInit
     0729c0b4f98e6f4191d204069ce5fd0a56b4ca162d3bd29e8bf6489250f1eebab ->>- 0cd7a4b9cd73044f33d256367627c393ac5fb170b07d2e45f119e1789b3c0acd9: deployWallet
     0cd7a4b9cd73044f33d256367627c393ac5fb170b07d2e45f119e1789b3c0acd9 ->> 0729c0b4f98e6f4191d204069ce5fd0a56b4ca162d3bd29e8bf6489250f1eebab: onWalletDeployed
     0cd7a4b9cd73044f33d256367627c393ac5fb170b07d2e45f119e1789b3c0acd9 ->> 0d7ebc23e461dffb0ed1c1944c0cfbc96b98c8417dbdccce57f38e4491cfdfd4a: onDeployRetry
@@ -435,10 +438,10 @@ sequenceDiagram
     0729c0b4f98e6f4191d204069ce5fd0a56b4ca162d3bd29e8bf6489250f1eebab ->> 0fa94171cb0565789224814561cc558e59315971ee9d03085de3dcb5f8b94d95e: #60;transfer#62;
     0729c0b4f98e6f4191d204069ce5fd0a56b4ca162d3bd29e8bf6489250f1eebab ->> 073ed104a7397feaf4f4a5f847ebda71691c52fd79b0eb0a177cd4c77de5733f9: makeDeBid
     073ed104a7397feaf4f4a5f847ebda71691c52fd79b0eb0a177cd4c77de5733f9 --) external: MakeBid
-    073ed104a7397feaf4f4a5f847ebda71691c52fd79b0eb0a177cd4c77de5733f9 ->> 0680ab631986c211f6a4cc6646d7a2347677e599f76d7a8cd76a22ec458c4d64f: ~constructor
+    073ed104a7397feaf4f4a5f847ebda71691c52fd79b0eb0a177cd4c77de5733f9 ->> 0680ab631986c211f6a4cc6646d7a2347677e599f76d7a8cd76a22ec458c4d64f: constructor
     073ed104a7397feaf4f4a5f847ebda71691c52fd79b0eb0a177cd4c77de5733f9 ->> 0729c0b4f98e6f4191d204069ce5fd0a56b4ca162d3bd29e8bf6489250f1eebab: onMakeBid
     0729c0b4f98e6f4191d204069ce5fd0a56b4ca162d3bd29e8bf6489250f1eebab --) external: MakeBid
-    0729c0b4f98e6f4191d204069ce5fd0a56b4ca162d3bd29e8bf6489250f1eebab ->> 0fa94171cb0565789224814561cc558e59315971ee9d03085de3dcb5f8b94d95e: ~onMakeBid
+    0729c0b4f98e6f4191d204069ce5fd0a56b4ca162d3bd29e8bf6489250f1eebab ->> 0fa94171cb0565789224814561cc558e59315971ee9d03085de3dcb5f8b94d95e: onMakeBid
 
     participant external as #60;external#62;
     participant 0729c0b4f98e6f4191d204069ce5fd0a56b4ca162d3bd29e8bf6489250f1eebab as DeAuction
@@ -473,10 +476,10 @@ sequenceDiagram
     073ed104a7397feaf4f4a5f847ebda71691c52fd79b0eb0a177cd4c77de5733f9 --) external: Finish
     073ed104a7397feaf4f4a5f847ebda71691c52fd79b0eb0a177cd4c77de5733f9 ->> 0729c0b4f98e6f4191d204069ce5fd0a56b4ca162d3bd29e8bf6489250f1eebab: onWin
     0729c0b4f98e6f4191d204069ce5fd0a56b4ca162d3bd29e8bf6489250f1eebab --) external: Win
-    0729c0b4f98e6f4191d204069ce5fd0a56b4ca162d3bd29e8bf6489250f1eebab ->> 0fa94171cb0565789224814561cc558e59315971ee9d03085de3dcb5f8b94d95e: ~onWin
+    0729c0b4f98e6f4191d204069ce5fd0a56b4ca162d3bd29e8bf6489250f1eebab ->> 0fa94171cb0565789224814561cc558e59315971ee9d03085de3dcb5f8b94d95e: onWin
     073ed104a7397feaf4f4a5f847ebda71691c52fd79b0eb0a177cd4c77de5733f9 ->> 0d37297b1eba504c3ec3c9d3c4fab7c3d4eb5152e39e380d727705c20fa8a2ff3: onFinish
     0d37297b1eba504c3ec3c9d3c4fab7c3d4eb5152e39e380d727705c20fa8a2ff3 --) external: Finish
-    0d37297b1eba504c3ec3c9d3c4fab7c3d4eb5152e39e380d727705c20fa8a2ff3 ->> 05ccd9b02b25ede74bdb3582a5a9d7b623c81e005d2fdf092bd3d5810da871128: ~onAuctionFinish
+    0d37297b1eba504c3ec3c9d3c4fab7c3d4eb5152e39e380d727705c20fa8a2ff3 ->> 05ccd9b02b25ede74bdb3582a5a9d7b623c81e005d2fdf092bd3d5810da871128: onAuctionFinish
 
     participant external as #60;external#62;
     participant 0d37297b1eba504c3ec3c9d3c4fab7c3d4eb5152e39e380d727705c20fa8a2ff3 as AuctionRoot
@@ -506,40 +509,59 @@ sequenceDiagram
     link 0fa94171cb0565789224814561cc558e59315971ee9d03085de3dcb5f8b94d95e: #64;tonscan.io @ https://dev.tonscan.io/accounts/0:fa94171cb0565789224814561cc558e59315971ee9d03085de3dcb5f8b94d95e
 ```
 
+<details>
+<summary>Click here to see main function for DeAuction</summary>
 
-
-
-
-
-
-
-
-
-
-{
-  "Account": {
-    "address": "0:584b18626761c3a584101de8cb604c4dcfab3e8ffdc3c6893ba5cd55527e5078",
-    "name": "Wallet"
-  },
-  "NeverRoot": {
-    "address": "0:bc661b83bb88f76b9e17a09e053a4f13a8bc5c05beb3c6ed77d31cf7d02250e3",
-    "name": "TestNeverRoot"
-  },
-  "AuctionRoot": {
-    "address": "0:3f2d260ccef3ba4bc4581da87918ca76162ccc20e286082d9ebb384fdfc4e780",
-    "name": "AuctionRoot"
-  },
-  "NeverElector": {
-    "address": "0:747b9c2481513959f4a7f778b42724ac5e5f81953d73c77d0e083a5542f13340",
-    "name": "NeverElectorAuction"
-  }
-}
-
-ECC
-INTERAFECECCE
-CONSTANTS GAS COMFIGS
-
-**xxx:**
-```mermaid
-
+```solidity
+function finishSubVoting() external;
+function allowedPrice() external view returns (PriceRange allowed);
+function calcBidHash(uint128 price, uint256 salt) external view returns (uint256 hash);
+function makeBid(uint256 hash) external view;
+function confirmBid(uint128 price, uint256 salt) external;
+function onWin(uint128 price, uint128 amount) external override;
+function pingAuctionFinish() external view;
+function checkAggregator() external view returns (bool isFair);
+function slash() external;
 ```
+
+</details>
+
+## Viewer
+Viewer listen for events and display all info about current auction
+
+![viewer](docs/viewer.png)
+
+## Constants
+
+All contact system is very configurable. There are several configuration places:
+1) contracts/utils/Constants.sol (MIN_LOT_SIZE) - contact constants
+2) contracts/utils/Gas.sol - contact gas (already optimized)
+3) scripts/3-deploy-auction-root.js - deploy default params for Auctions and DeActions,
+optimal value is specified in comments 
+4) scripts/5-deploy-auction-root.js - deploy params for DevNet tests
+
+## Other features
+DeAuction supports both TIP3.1 standard (broxus realization) and Extra Currency Collection (ECC).
+There is common [DeAuction](contracts/DeAuction.sol) abstract contract, and specified
+realization [DeAuctionTIP3](contracts/DeAuctionTIP3.sol) and [DeAuctionECC](contracts/DeAuctionECC.sol)
+
+All contracts have separate list of interfaces, you can find they
+in `contracts/interfaces/internal` folder
+
+## Demo
+**Important! All demos must be started only from project root folder (not from demo folder)!**
+
+There are several demos for quick verifying of work:
+1) `./demo/1-init.sh` - initializing project
+(do it after steps that describes in [setup environment](#Setup-environment)!)
+2) `./demo/2-build.sh.sh` - compile source files
+3) `./demo/3-test.sh` - test all
+4) `./demo/4-deploy.sh` - deploy to network passed in `locklift.config.js`
+5) `./demo/5-integration.sh` - call only after 4th step, demo of integration with
+[solution in Phase 1](https://firebasestorage.googleapis.com/v0/b/ton-labs.appspot.com/o/documents%2Fapplication%2Fpdf%2Fjz5i5hcndnktkekjat-NOT%20Pruvendo%20Implementation%20draft%203.pdf?alt=media&token=015ee545-fe73-432c-a525-9a4e672128ba)
+
+Additional script demo for manual testing: `./demo/demo-devnet.sh`
+(it deploys in network that specified in `locklift.config.js`)
+
+Or just use `build/TestAuctionRoot.abi.json` with Auction Root in DevNet
+at address `0:d37297b1eba504c3ec3c9d3c4fab7c3d4eb5152e39e380d727705c20fa8a2ff3`
