@@ -22,6 +22,9 @@ contract Bid {
 
     constructor(address owner) public onlyAuction {
         _owner = owner;
+        TvmCell salt = abi.encode(_auction, owner);
+        TvmCell code = tvm.setCodeSalt(tvm.code(), salt);
+        tvm.setcode(code);
     }
 
     function getDetails() public view responsible returns (address, uint256, address) {

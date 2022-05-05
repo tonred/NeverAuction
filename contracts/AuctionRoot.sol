@@ -84,6 +84,12 @@ contract AuctionRoot is IAuctionRoot, IUpgradable, PlatformUtils, TransferUtils,
         return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} tvm.hash(code);
     }
 
+    function expectedBidHashCode(address auction, address owner) public view responsible override returns (uint256 hash) {
+        TvmCell salt = abi.encode(auction, owner);
+        TvmCell code = tvm.setCodeSalt(_auctionConfig.bidCode, salt);
+        return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} tvm.hash(code);
+    }
+
     function getDetails() public view responsible override returns (address elector, AuctionConfig auctionConfig, DeAuctionGlobalConfig deAuctionGlobalConfig) {
         return {value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false} (_elector, _auctionConfig, _deAuctionGlobalConfig);
     }

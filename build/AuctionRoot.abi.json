@@ -54,6 +54,17 @@
 			]
 		},
 		{
+			"name": "expectedBidHashCode",
+			"inputs": [
+				{"name":"answerId","type":"uint32"},
+				{"name":"auction","type":"address"},
+				{"name":"owner","type":"address"}
+			],
+			"outputs": [
+				{"name":"hash","type":"uint256"}
+			]
+		},
+		{
 			"name": "getDetails",
 			"inputs": [
 				{"name":"answerId","type":"uint32"}
