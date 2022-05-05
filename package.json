@@ -7,7 +7,10 @@
     "setup": "npm install && git pull && npm install",
     "build": "export $(cat .env | xargs) && locklift build --config locklift.config.js",
     "test": "locklift test --test test/ --config locklift.config.js --network local --disable-build",
-    "deploy-auction-root": "locklift run -s scripts/deploy-auction-root.js --config locklift.config.js --network local --disable-build"
+    "1-deploy-account": "locklift run -s scripts/1-deploy-account.js --config locklift.config.js --network local --disable-build",
+    "2-deploy-never-root": "locklift run -s scripts/2-deploy-never-root.js --config locklift.config.js --network local --disable-build",
+    "3-deploy-auction-root": "locklift run -s scripts/3-deploy-auction-root.js --config locklift.config.js --network local --disable-build",
+    "4-deploy-never-elector": "locklift run -s scripts/4-deploy-never-elector.js --config locklift.config.js --network local --disable-build"
   },
   "author": "TONRED",
   "license": "ISC",
@@ -18,6 +21,7 @@
     "folder-hash": "^4.0.1",
     "mocha": "^9.1.3",
     "mocha-logger": "^1.0.7",
+    "prompt-sync": "^4.2.0",
     "ton-eth-bridge-token-contracts": "git://github.com/broxus/ton-eth-bridge-token-contracts#6503e61880c03fb45741c177c25f4955dca5f0df"
   },
   "devDependencies": {

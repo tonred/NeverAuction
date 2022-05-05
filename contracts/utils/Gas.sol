@@ -25,4 +25,8 @@ library Gas {
     uint128 constant DE_AUCTION_INIT_VALUE          = 3 ton;
     uint128 constant DE_PARTICIPANT_ACTION_VALUE    = 1 ton;
 
+    // Elector
+    uint128 constant MINT_VALUE                     = 1 ton;
+    uint128 constant CREATE_AUCTION_VALUE           = 1.2 ton;  // more than DEPLOY_AUCTION_VALUE
+
 }

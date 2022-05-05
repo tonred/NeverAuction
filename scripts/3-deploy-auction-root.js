@@ -1,16 +1,24 @@
 const {
   logContract,
-  logger
+  logger,
+  Migration,
+  afterRun,
 } = require('./utils');
+const prompt = require('prompt-sync')();
 
 const DAYS = 60 * 60 * 24;
 
 
 const main = async () => {
-  const deAuctionContract = 'DeAuctionTIP3';
-  // const deAuctionContract = 'DeAuctionECC';
+  const migration = new Migration();
+
   const [keyPair] = await locklift.keys.getKeyPairs();
-  const tempElector = await deployAccount(keyPair, 1);
+  const tempAdmin = migration.load(await locklift.factory.getAccount('Wallet'), 'Account');
+  tempAdmin.setKeyPair(keyPair);
+  tempAdmin.afterRun = afterRun;
+  const neverRoot = migration.load(await locklift.factory.getAccount('TestNeverRoot'), 'NeverRoot');
+
+  const deAuctionContract = 'DeAuctionTIP3';
   const Platform = await locklift.factory.getContract('Platform');
   const Auction = await locklift.factory.getContract('Auction');
   const DeAuction = await locklift.factory.getContract(deAuctionContract);
@@ -18,11 +26,23 @@ const main = async () => {
   const Bid = await locklift.factory.getContract('Bid');
   const AuctionRoot = await locklift.factory.getContract('AuctionRoot');
 
+  // For TIP3 store only `neverRoot` in init details
+  let encoded = await locklift.ton.client.abi.encode_boc({
+    params: [{
+      name: 'neverRoot',
+      type: 'address',
+    }],
+    data: {
+      'neverRoot': neverRoot.address
+    }
+  });
+  let initDetails = encoded.boc;
+
   logger.log('Deploying Auction Root');
   let auctionRoot = await locklift.giver.deployContract({
     contract: AuctionRoot,
     constructorParams: {
-      elector: tempElector.address,
+      elector: tempAdmin.address,
       auctionConfig: {
         fee: 1e9,                 // 1e9
         deposit: 2e9,             // 1000e9
@@ -35,7 +55,7 @@ const main = async () => {
         subOpenDuration: 30,      // 1 days
         subConfirmDuration: 30,   // 1 days
         makeBidDuration: 30,      // 1 days
-        initDetails: 'te6ccgEBAQEAJAAAQ4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABA=',
+        initDetails: initDetails,
       },
     },
     initParams: {
@@ -45,7 +65,7 @@ const main = async () => {
   }, locklift.utils.convertCrystal(5, 'nano'));
 
   logger.log(`Installing codes`);
-  await tempElector.runTarget({
+  await tempAdmin.runTarget({
     contract: auctionRoot,
     method: 'setCodes',
     params: {
@@ -57,33 +77,25 @@ const main = async () => {
     value: locklift.utils.convertCrystal(0.3, 'nano')
   });
 
-  logger.log(`Transferring elector`);
-  await tempElector.runTarget({
-    contract: auctionRoot,
-    method: 'changeElector',
-    params: {
-      elector: '0:fa94171cb0565789224814561cc558e59315971ee9d03085de3dcb5f8b94d95e',
-    },
-    value: locklift.utils.convertCrystal(0.3, 'nano')
-  });
+  let userAddress = prompt(
+      'Address to transfer token root for testing\n' +
+      'This will break next (4th) step because script will not be able to transfer owner to Never Elector\n' +
+      'Address (or just enter to skip): '
+  );
+  if (userAddress) {
+    logger.log(`Transferring elector`);
+    await tempAdmin.runTarget({
+      contract: auctionRoot,
+      method: 'changeElector',
+      params: {
+        elector: userAddress,
+      },
+      value: locklift.utils.convertCrystal(0.3, 'nano')
+    });
+  }
 
   await logContract(auctionRoot);
-};
-
-const deployAccount = async function (key, value) {
-  const Account = await locklift.factory.getAccount('Wallet');
-  let account = await locklift.giver.deployContract({
-    contract: Account,
-    constructorParams: {},
-    keyPair: key
-  }, locklift.utils.convertCrystal(value, 'nano'));
-  account.setKeyPair(key);
-  account.afterRun = afterRun;
-  return account;
-}
-
-const afterRun = async (tx) => {
-  await new Promise(resolve => setTimeout(resolve, 2000));
+  migration.store(auctionRoot, `AuctionRoot`);
 };
 
 

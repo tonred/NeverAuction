@@ -54,7 +54,6 @@ def solidity_function(send_as: str = 'owner', ignore: tuple = ()):
             method = stringcase.camelcase(function.__name__)
             params, options = _process_function_args(function, args, kwargs, ignore)
             sender = _find_sender(send_as, self, params)
-            print(method, params, options)
             sender.run_target(self, options=options, method=method, params=params)
             return function(self, *args, **kwargs)
 

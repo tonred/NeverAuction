@@ -1,10 +1,12 @@
 const {
   logContract,
+  Migration,
   logger
 } = require('./utils');
 
 
 const main = async () => {
+  const migration = new Migration();
   const [keyPair] = await locklift.keys.getKeyPairs();
   const Account = await locklift.factory.getAccount('Wallet');
 
@@ -16,8 +18,9 @@ const main = async () => {
       randomNonce: locklift.utils.getRandomNonce(),
     },
     keyPair
-  }, locklift.utils.convertCrystal(5, 'nano'));
+  }, locklift.utils.convertCrystal(10, 'nano'));
   await logContract(account);
+  migration.store(account, `Account`);
 };
 
 

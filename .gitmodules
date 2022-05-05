@@ -1,0 +1,3 @@
+[submodule "not_oracle"]
+	path = not_oracle
+	url = https://github.com/tonred/not_oracle

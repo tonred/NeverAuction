@@ -1,9 +1,9 @@
 module.exports = {
   compiler: {
-      path: 'path/.everdev/solidity/solc',
+      path: '~/.everdev/solidity/solc',
   },
   linker: {
-    path: 'path/.everdev/solidity/tvm_linker',
+    path: '~/.everdev/solidity/tvm_linker',
   },
   networks: {
     local: {
