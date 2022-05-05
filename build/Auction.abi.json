@@ -208,6 +208,22 @@
 			]
 		},
 		{
+			"name": "_bidsCount",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_bidsCount","type":"uint64"}
+			]
+		},
+		{
+			"name": "_confirmBidsCount",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_confirmBidsCount","type":"uint64"}
+			]
+		},
+		{
 			"name": "_finished",
 			"inputs": [
 			],

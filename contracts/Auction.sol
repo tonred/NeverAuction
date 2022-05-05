@@ -37,8 +37,8 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
     uint32 public _confirmTime;
     uint32 public _finishTime;
 
-    uint64 _bidsCount;
-    uint64 _confirmBidsCount;
+    uint64 public _bidsCount;
+    uint64 public _confirmBidsCount;
 
     bool public _finished;
     BidData public _winner;
