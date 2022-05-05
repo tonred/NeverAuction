@@ -17,8 +17,6 @@ import "./utils/TransferUtils.sol";
 
 
 abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUtils {
-    // todo flow describe
-    // todo docstrings
     event Stake(address owner, uint128 value);
     event RemoveStake(address owner, uint128 value);
     event ConfirmPrice(address owner, uint128 price);
@@ -159,6 +157,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
     }
 
 
+    // for DeParticipant
     function stake(address owner, uint128 value, optional(uint256) priceHash) public override onlyDeParticipant(owner) doUpdate {
         bool success = false;
         if (_phase == DePhase.SUB_OPEN) {
@@ -178,6 +177,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
         }(_nonce, value, priceHash, success);
     }
 
+    // for DeParticipant
     function removeStake(address owner, uint128 value) public override onlyDeParticipant(owner) doUpdate {
         bool success = false;
         if (_phase == DePhase.SUB_OPEN && owner != _aggregator) {
@@ -192,6 +192,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
         }(_nonce, value, success);
     }
 
+    // for DeParticipant
     function confirmPrice(address owner, uint128 price, uint128 value) public override onlyDeParticipant(owner) doUpdate {
         bool success = false;
         if (_phase == DePhase.SUB_CONFIRM && _isInRange(price, _prices)) {
@@ -207,6 +208,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
         }(_nonce, success);
     }
 
+    // Anyone, finish sub voting, calculate consensus price
     function finishSubVoting() public override doUpdate inPhase(DePhase.SUB_FINISH) cashBack {
         uint128 minStake = _auctionDetails.minLotSize * _prices.max;
         if (_totalStake < minStake) {
@@ -223,6 +225,8 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
         emit FinishSubVoting();
     }
 
+    // Anyone, get range of allowed price
+    // Used by aggregator to make bid
     function allowedPrice() public view override returns (PriceRange allowed) {
         uint128 delta = math.muldiv(_avgPrice, _deviation, Constants.PERCENT_DENOMINATOR);
         uint128 min = math.max(_prices.min, _avgPrice - delta);
@@ -244,6 +248,11 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
         return _calcBidHash(price, amount, address(this), salt);
     }
 
+    /*
+    Make bid in main auction, only by Aggregator
+    @param hash Bid hash (via `calcBidHash`)
+    @value deposit value plus Gas.DE_AUCTION_ACTION_VALUE
+    */
     function makeBid(uint256 hash) public view override onlyAggregator inPhase(DePhase.WAITING_BID) cashBack {
         IAuction(_auction).makeDeBid{
             value: _auctionDetails.deposit + Gas.DE_AUCTION_ACTION_VALUE,
@@ -252,6 +261,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
         }(_nonce, hash);
     }
 
+    // only Auction
     function onMakeBid() public override onlyAuction {
         _phase = DePhase.BID_MADE;
         emit MakeBid();
@@ -261,6 +271,12 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
     // is never called
     function onRemoveBid() public override onlyAuction { revert(); }
 
+    /*
+    Confirm bid in main auction, only by Aggregator
+    @param price price for 1 token used to make bid
+    @param salt  salt used to make bid
+    @value More than Gas.DE_AUCTION_ACTION_VALUE
+    */
     function confirmBid(uint128 price, uint256 salt) public override onlyAggregator inPhase(DePhase.BID_MADE) {
         PriceRange allowed = allowedPrice();
         require(_isInRange(price, allowed), ErrorCodes.PRICE_OUT_OF_RANGE);
@@ -274,12 +290,14 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
         msg.sender.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED, bounce: false});
     }
 
+    // only Auction
     function onConfirmBid() public override onlyAuction {
         _phase = DePhase.BID_CONFIRMED;
         emit ConfirmBid();
         IAggregator(_aggregator).onConfirmBid{value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false}();
     }
 
+    // only Auction
     function onWin(uint128 price, uint128 amount) public override onlyAuction {
         _phase = DePhase.WIN;
         _everValue = _totalStake - Converter.toValue(price, amount);
@@ -287,6 +305,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
         IAggregator(_aggregator).onWin{value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false}(price, amount);
     }
 
+    // Anyone, ping if Auctions is finished
     function pingAuctionFinish() public view override inPhase(DePhase.BID_CONFIRMED) {
         IAuction(_auction).getPhase{
             value: 0,
@@ -296,6 +315,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
         }();
     }
 
+    // only Auction
     function onPingAuctionFinish(Phase phase) public view override onlyAuction inPhase(DePhase.BID_CONFIRMED) {
         _reserve();
         if (phase == Phase.FINISH) {
@@ -315,6 +335,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
         }
     }
 
+    // only Auction
     function onGetWinner(BidData winner) public override onlyAuction inPhase(DePhase.BID_CONFIRMED) {
         if (winner.owner != address(this)) {
             emit Lose();
@@ -330,6 +351,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
         emit Distribution();
     }
 
+    // Anyone, check if aggregator must be slashed
     function checkAggregator() public view override returns (bool isFair) {
         if (now >= _auctionDetails.confirmTime && _phase < DePhase.BID_MADE) {
             // aggregator forgot to make bid
@@ -342,6 +364,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
         return true;
     }
 
+    // Anyone, slash unfair aggregator
     function slash() public override cashBack {
         bool isFair = checkAggregator();
         require(!isFair, ErrorCodes.AGGREGATOR_IS_FAIR);
@@ -354,6 +377,7 @@ abstract contract DeAuction is IDeAuction, PlatformUtils, HashUtils, TransferUti
         emit Slashed();
     }
 
+    // only DeParticipant
     function claim(address owner, uint128 value) public override onlyDeParticipant(owner) {
         bool success = true;
         uint128 everValue = 0;

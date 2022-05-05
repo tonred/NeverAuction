@@ -70,12 +70,12 @@ contract Auction is IAuction, PlatformUtils, HashUtils, TransferUtils {
 
 
     /*
-    // todo
     @param fee                  Non-returnable fee value for each bid
     @param deposit              Returnable deposit value for each bid
     @param startTime            Timestamp when auction will start
     @param openDuration         Duration of open phase in seconds
-    @param confirmDuration Duration of confirmation phase in seconds
+    @param deBidDuration        Duration of de bid phase in seconds
+    @param confirmDuration      Duration of confirmation phase in seconds
     @param bidCode              Code of bid contract
     */
     function onCodeUpgrade(TvmCell input) private {
