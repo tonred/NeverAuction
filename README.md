@@ -8,6 +8,12 @@ Viewer: [https://never.ton.red](https://never.ton.red)
 
 TG: @Abionics, @get_username
 
+From team that won 1st place in DevEx contests
+[#26](https://devex.gov.freeton.org/proposal?proposalAddress=0%3A2bfb73547c1a5f6ccb26b2bbe3c13621a2a8dcd4d887848406a353429a4f08fe)
+and [#16](https://devex.gov.freeton.org/proposal?proposalAddress=0%3Af35243af447deaaba11ad8f62cec3bba052d92b4455e0ddf57e6ea3fd88ecbfa),
+where participant had to implement different kind of auctions. This project is based on ideas
+and code from than contests
+
 ## Key features:
 * Really blind Vickrey auction
 * DeAuction for group bid with interesting concept
